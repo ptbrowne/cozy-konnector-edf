@@ -9,8 +9,8 @@ konnectorLibs = require 'cozy-konnector-libs'
 fetcher = konnectorLibs.fetcher
 BaseKonnector = konnectorLibs.baseKonnector
 
-File = konnectorLibs.models.file
-Folder = konnectorLibs.models.folder
+saveDataAndFile = require './lib/save_data_and_file'
+filterExisting = konnectorLibs.filterExisting
 Bill = konnectorLibs.models.bill
 Client = require './models/client'
 Contract = require './models/contract'
@@ -26,38 +26,39 @@ logger = require('printit') {
     date: true
 }
 
+DOMAIN = 'https://ws-mobile-particuliers.edf.com'
 # Requests
 
 getEDFToken = (requiredFields, entries, data, callback) ->
     K.logger.info 'getEDFToken'
-    path = "/ws/authentifierUnClientParticulier_rest_V2-0/invoke"
-    body =
-        "ns:msgRequete":
-            "$":
-                "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance"
-                "xsi:schemaLocation": "http://www.edf.fr/commerce/" +
-                "passerelle/authentifierUnClientParticulier/service/v2/" +
-                "message authentifierUnClientParticulier.xsd"
-                "xmlns:ns": "http://www.edf.fr/commerce/passerelle/" +
-                "authentifierUnClientParticulier/service/v2/message"
-
-            "ns:enteteEntree": [
-                "ns:idCanal": 5
+    path = "/ws/authentifierUnClientParticulier_rest_V3-0/invoke"
+    body = {
+        "tns:msgRequete": {
+            "$": {
+                "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+                "xmlns:tns": "http://www.edf.fr/commerce/passerelle/pas001/authentifierUnClientParticulier/service/v3",
+                "xsi:schemaLocation": "http://www.edf.fr/commerce/passerelle/pas001/authentifierUnClientParticulier/service/v3 authentifierUnClientParticulier.xsd",
+            },
+            "tns:enteteEntree": [
+              { "tns:idCanal": 5 }
+            ],
+            "tns:corpsEntree": [ {
+                "tns:idAppelant": requiredFields.email,
+                "tns:password": requiredFields.password
+              }
             ]
-            "ns:corpsEntree": [
-                "ns:idAppelant": requiredFields.email
-                "ns:password": requiredFields.password
-            ]
+        }
+    }
 
     edfRequestPost path, body, (err, result) ->
         return callback err if err
 
-        errorCode = getF(result, 'ns:enteteSortie', 'ent:codeRetour')
+        errorCode = getF(result['tns:msgReponse'], 'tns:enteteSortie', 'ent:codeRetour')
         if errorCode and errorCode isnt '0000'
             K.logger.error getF result, \
-                'ns:enteteSortie', 'ent:libelleRetour '
+                'tns:enteteSortie', 'ent:libelleRetour '
 
-        token = getF result['ns:msgReponse'], 'ns:corpsSortie', 'ns:jeton'
+        token = getF result['tns:msgReponse'], 'tns:corpsSortie', 'tns:jeton'
 
         if token?
             K.logger.info "EDF token fetched"
@@ -70,26 +71,25 @@ getEDFToken = (requiredFields, entries, data, callback) ->
 fetchListerContratClientParticulier = (reqFields, entries, data, callback) ->
     K.logger.info "fetch listerContratClientParticulier"
 
-    path = '/ws/listerContratClientParticulier_rest_V4-0/invoke'
-    body =
-        'msgRequete':
-            '$':
-                'xmlns': "http://www.edf.fr/commerce/passerelle/pas072/" +
-                "listerContratClientParticulier/service/v3"
-                'xmlns:xsi': "http://www.w3.org/2001/XMLSchema-instance"
-                'xsi:schemaLocation': "http://www.edf.fr/commerce/passerelle/" +
-                "pas072/listerContratClientParticulier/service/" +
-                "v3 listerContratClientParticulier.xsd"
-
-            'EnteteEntree':
-                'Jeton': data.edfToken
+    path = '/ws/listerContratClientParticulier_rest_V3-0/invoke'
+    body = {
+        "tns:msgRequete": {
+            "$": {
+                "xmlns:tns": "http://www.edf.fr/commerce/passerelle/pas072/listerContratClientParticulier/service/v3",
+                "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+                "xsi:schemaLocation": "http://www.edf.fr/commerce/passerelle/pas072/listerContratClientParticulier/service/v3 listerContratClientParticulier_rest_V3-0.xsd "
+            },
+            "tns:EnteteEntree": { 'tns:Jeton': data.edfToken },
+            "tns:CorpsEntree": { "tns:SynchroniserSI": true }
+        }
+    }
 
     edfRequestPost path, body, (err, result) ->
         return callback err if err
         try
-            errorCode = getF result, 'tns:EnteteSortie', 'tns:CodeErreur'
+            errorCode = getF result['tns:msgReponse'], 'tns:EnteteSortie', 'tns:CodeErreur'
             if errorCode and errorCode isnt 'PSC0000'
-                K.logger.error getF result, \
+                K.logger.error getF result['tns:mgsReponse'], \
                     'tns:EnteteSortie', 'tns:LibelleErreur'
 
                 return callback 'request error'
@@ -375,43 +375,32 @@ fetchVisualiserPartenaire = (requiredFields, entries, data, callback) ->
 fetchVisualiserAccordCommercial = (requiredFields, entries, data, callback) ->
     K.logger.info "fetchVisualiserAccordCommercial"
 
-    path = '/ws/visualiserAccordCommercial_rest_V2-0/invoke'
-    body =
-        'msg:msgRequete':
-            '$':
-                'xmlns:dico': "http://www.edf.fr/commerce/passerelle/commun/" +
-                "v2/dico"
-                'xmlns:ent': "http://www.edf.fr/commerce/passerelle/commun/v2" +
-                "/entete"
-                'xmlns:msg': "http://www.edf.fr/commerce/passerelle/css/" +
-                "visualiserAccordCommercial/service/v2"
-                'xmlns:xsi': "http://www.w3.org/2001/XMLSchema-instance"
-                'xsi:schemaLocation': "http://www.edf.fr/commerce/passerelle/" +
-                "css/visualiserAccordCommercial/service/" +
-                "v2 visualiserAccordCommercial.xsd"
-
-            'msg:enteteEntree':
-                'ent:jeton': data.edfToken
-
-            'msg:corpsEntree':
-                'msg:numeroBp': entries.clients[0].clientId
-                'msg:numeroAcc': entries.clients[0].numeroAcc
-
+    path = '/ws/visualiserAccordCommercial_rest_sso_V3-0/invoke'
+    body = {
+      "visualiserAccordCommercialRequest": {
+        "$": {
+          "xmlns": "http://www.edf.fr/psc/0122/v3/visualiserAccordCommercial",
+          "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+          "xsi:schemaLocation": "http://www.edf.fr/psc/0122/v3/visualiserAccordCommercial visualiserAccordCommercial.xsd"
+        },
+        "jeton": data.edfToken,
+        "numeroBp": entries.clients[0].clientId,
+        "numeroAcc": entries.clients[0].numeroAcc,
+        "applicationAppelante": "EDFETMOI"
+      }
+    }
 
     edfRequestPost path, body, (err, result) ->
         return callback err if err
         try
-            errorCode = getF result, 'ns:enteteSortie', 'ent:codeErreur'
-            if errorCode and errorCode isnt '0'
-                K.logger.error getF result, \
-                    'tns:enteteSortie', 'tns:libelleErreur'
+            errorCode = getF result['tns:visualiserAccordCommercialResponse'], "tns:responseWebService", "tns:CodeEtatService"
+            if errorCode and errorCode isnt 'PSC0000'
+                K.logger.error getF result['tns:visualiserAccordCommercialResponse'], "tns:responseWebService", "tns:LibelleEtatService"
 
                 return callback() # Continue on error.
 
 
-
-            acoElem = getF result["ns:msgReponse"], "ns:corpsSortie", \
-                "ns:listeAccordCommerciaux", "ns:acordcommercial"
+            acoElem = getF result['tns:visualiserAccordCommercialResponse'], "tns:responseWebService", "tns:listeAccordsCommerciaux", "tns:item"
 
             paymentTerms =
                 vendor: 'EDF'
@@ -419,15 +408,15 @@ fetchVisualiserAccordCommercial = (requiredFields, entries, data, callback) ->
                 docTypeVersion: K.docTypeVersion
 
             bankDetails =
-                iban: getF(acoElem, 'ns:banque', 'ns:iban')
-                holder: getF(acoElem, 'ns:compte', 'ns:titulaire')
-                bank: getF(acoElem, "ns:banque", "ns:nom")
+                iban: getF(acoElem, 'tns:banque', 'tns:iban')
+                holder: getF(acoElem, 'tns:compte', 'tns:titulaire')
+                bank: getF(acoElem, "tns:banque", "tns:nom")
 
             bankAddress =
-                street: getF(acoElem, 'ns:banque', 'ns:numNomRue')
-                city: getF(acoElem, 'ns:banque', 'ns:codePostalVille')
+                street: getF(acoElem, 'tns:banque', 'tns:numNomRue')
+                city: getF(acoElem, 'tns:banque', 'tns:codePostalVille')
                 # postcode ?
-                country: getF(acoElem, 'ns:banque', 'ns:pays')
+                country: getF(acoElem, 'tns:banque', 'tns:pays')
 
             bankAddress.formated = "#{bankAddress.street}" +
                 "\n#{bankAddress.city} #{bankAddress.country}"
@@ -435,31 +424,31 @@ fetchVisualiserAccordCommercial = (requiredFields, entries, data, callback) ->
             bankDetails.bankAddress = bankAddress
             paymentTerms.encryptedBankDetails = JSON.stringify bankDetails
 
-            paymentTerms.balance = getF acoElem, 'ns:detail', 'ns:solde'
-            paymentTerms.paymentMeans = getF acoElem, 'ns:detail'
-            , 'ns:modeEncaissement'
-            paymentTerms.modifBankDetailsAllowed = getF acoElem, 'ns:detail'
-            , 'ns:modifIbanAutorisee'
+            paymentTerms.balance = getF acoElem, 'tns:detail', 'tns:solde'
+            paymentTerms.paymentMeans = getF acoElem, 'tns:detail'
+            , 'tns:modeEncaissement'
+            paymentTerms.modifBankDetailsAllowed = getF acoElem, 'tns:detail'
+            , 'tns:modifIBANAutorisee'
             #accountNumber: getF acoElem, 'ns:detail', 'ns:numeroEtendu'
             paymentTerms.dernierReglement =
-                    date: getF acoElem, 'ns:dernierReglement', 'ns:date'
-                    amount: getF acoElem, 'ns:dernierReglement', 'ns:montant'
-                    type: getF acoElem, 'ns:dernierReglement', 'ns:type'
-            paymentTerms.billFrequency = getF acoElem, 'ns:facturation', \
-                                    'ns:periodicite'
+                    date: getF acoElem, 'tns:dernierReglement', 'tns:date'
+                    amount: getF acoElem, 'tns:dernierReglement', 'tns:montant'
+                    type: getF acoElem, 'tns:dernierReglement', 'tns:type'
+            paymentTerms.billFrequency = getF acoElem, 'tns:facturation', \
+                                    'tns:periodicite'
             paymentTerms.nextBillDate = getF acoElem
-                , 'ns:facturation', 'ns:dateProchaineFacture'
 
-            paymentTerms.idPayer = getF acoElem, 'ns:numeroPayeur'
-            paymentTerms.payerDivergent = getF acoElem, 'ns:payeurDivergent'
+            paymentTerms.idPayer = getF acoElem, 'tns:numeroPayeur'
+            paymentTerms.payerDivergent = getF acoElem, 'tns:payeurDivergent'
+            # paymentTerms.mensuSansSurprise = getF acoElem, 'tns:mensuSansSurprise'
 
-            servicesElem = acoElem['ns:services']
+            servicesElem = getF(acoElem, 'tns:services')['tns:item']
             services = servicesElem.map (serviceElem) ->
                 service = {}
-                service.name = getF serviceElem, 'ns:nomService'
-                service.status = getF serviceElem, 'ns:etat'
-                service.valueSubscribed = getF serviceElem, 'ns:valeurSouscrite'
-                service.valuesAvailable = serviceElem['ns:valeursPossibles']
+                service.name = getF serviceElem, 'tns:nomService'
+                service.status = getF serviceElem, 'tns:etat'
+                service.valueSubscribed = getF serviceElem, 'tns:valeurSouscrite'
+                service.valuesAvailable = serviceElem['tns:valeursPossibles']
 
                 return service
 
@@ -557,65 +546,64 @@ fetchVisualiserCalendrierPaiement = (requiredFields, entries, data, callback) ->
             K.logger.error e
             callback e
 
-fetchRecupereDocumentContractuelListx = (reqFields, entries, data, callback) ->
-    K.logger.info "fetchRecupereDocumentContractuelListx"
-    path = '/ws/recupererDocumentContractuelListx_rest_V1-0/invoke'
-    body =
-        'ns:msgRequete':
-            '$':
-                'xmlns:dicoPAS': "http://www.edf.fr/commerce/passerelle/" +
-                "commun/v2/dico"
-                'xmlns:dico': "http://www.edf.fr/psc/pscmaxsd/commun/v1/dico"
-                'xmlns:ns': "http://www.edf.fr/commerce/passerelle/psc/" +
-                "recupererDocumentContractuelListx/service/v1"
-                'xmlns:ent': "http://www.edf.fr/commerce/passerelle/commun/" +
-                "v2/entete"
 
-            'ns:jeton': data.edfToken
-            'ns:options': [
-                'ns:cle': 'id'
-                'ns:valeur': 'pscedfmoi'
-            ,
-                'ns:cle': 2
-                'ns:valeur': entries.clients[0].clientId
-            ,
-                'ns:cle': 6
-                'ns:valeur': 'Facture'
-            ]
+fetchVisualiserFacture = (reqFields, entries, data, callback) ->
+    K.logger.info "fetchVisualiserFacture"
+    path = '/ws/visualiserFacture_rest_V3-0/invoke'
+    body = {
+      "tns:msgRequete": {
+        "$": {
+            "xmlns:tns": "http://www.edf.fr/commerce/passerelle/pas023/visualiserFacture/service/v2",
+        },
+        "visualiserFactureRequest": {
+          "numeroBp": entries.clients[0].clientId,
+          "jeton": data.edfToken,
+          "numeroAcc": entries.clients[0].numeroAcc,
+          "dateRecherche": "1900-01-01"
+        }
+      }
+    }
 
     edfRequestPost path, body, (err, result) ->
         return callback err if err
 
         bills = []
         try
-            documents = result["ns:msgReponse"]["ns:docubase"][0]["ns:document"]
+            errorCode = getF result["tns:msgReponse"], "visualiserFactureResponse", "responseWebService", "codeErreur"
+            if errorCode and errorCode isnt '0'
+                K.logger.error getF result["tns:msgReponse"], "visualiserFactureResponse", "responseWebService", "libelleErreur"
+                return callback() # Continue, whitout error.
+
+            documents = getF(result["tns:msgReponse"], "visualiserFactureResponse", "responseWebService", "listeFactures")["item"]
 
             bills = documents.map (elem) ->
+                details = getF elem, "resume"
                 bill =
                     vendor: 'EDF'
                     clientId: entries.clients[0].clientId
+                    title: getF(details, "type")
+                    number: getF elem, "numeroFacture"
+                    date: moment getF(details, "dateEmission"), 'YYYY-MM-DD'
+                    paymentDueDate: getF(details, "dateEcheance")
+                    scheduledPaymentDate: getF(details, "datePrelevement")
+                    totalPaymentDue: getF(details, "montantFactureFraiche")
+                    value: getF(details, "montantReclame")
+                    balanceBeforeInvoice: getF(details, "soldeAvantFacture")
+
+                    # TODO: hack to force download, bad because duplicate URL !
+                    pdfurl: DOMAIN + '/ws/recupererDocumentContractuelGet_rest_V1-0/invoke'
                     docTypeVersion: K.docTypeVersion
-
-                date = moment getF(elem, 'ns:datecre'), 'YYYYMMDD'
-                bill.date = date.format 'YYYY-MM-DD'
-
-                for option in elem['ns:category']
-                    key = getF option, 'ns:id'
-                    value = getF option, 'ns:valeur'
-
-                    switch key
-                        when '4' then bill.number = value
-                        when '7' then bill.amount = Number value
 
                 return bill
 
-            entries.bills = bills
+            entries.fetched = bills
             K.logger.info "Fetched #{bills.length} bills"
             callback()
         catch e
-            K.logger.error "While fetchRecupereDocumentContractuelListx"
+            K.logger.error "While fetchVisualiserFacture"
             K.logger.error e
             callback e
+
 
 fetchVisualiserHistoConso = (requiredFields, entries, data, callback) ->
     K.logger.info "fetchVisualiserHistoConso"
@@ -644,7 +632,6 @@ fetchVisualiserHistoConso = (requiredFields, entries, data, callback) ->
 
         edfRequestPost path, body, (err, result) ->
             return callback err if err
-
             try
 
                 errorCode = getF result, 'ns:enteteSortie', 'ent:codeRetour'
@@ -696,43 +683,45 @@ fetchVisualiserHistoConso = (requiredFields, entries, data, callback) ->
         callback()
 
 
-fetchPDF = (token, client, billNumber, callback) ->
-    K.logger.info "fetchPDF"
+saveBills = (requiredFields, entries, data, callback) ->
 
-    path = '/ws/recupererDocumentContractuelGet_rest_V1-0/invoke'
-    body =
-        'ns:msgRequete':
-            '$':
-                'xmlns:dicoPAS': "http://www.edf.fr/commerce/passerelle/" +
-                "commun/v2/dico"
-                'xmlns:dico': "http://www.edf.fr/psc/pscmaxsd/commun/v1/dico"
-                'xmlns:ns': "http://www.edf.fr/commerce/passerelle/psc/" +
-                "recupererDocumentContractuelGet/service/v1"
-                'xmlns:ent': "http://www.edf.fr/commerce/passerelle/commun/" +
-                "v2/entete"
+    options = {}
+    options.vendor = 'edf'
 
-            'ns:jeton': token
-            'ns:options': [
-                'ns:cle': 'id'
-                'ns:valeur': 'pscedfmoi'
-            ,
-                'ns:cle': 2
-                'ns:valeur': client.clientId
-            ,
-                'ns:cle': 4
-                'ns:valeur': billNumber
-            ,
-                'ns:cle': 6
-                'ns:valeur': 'Facture'
-            ]
+    options.requestoptions = (bill) ->
+        path = '/ws/recupererDocumentContractuelGet_rest_V1-0/invoke'
+        body = {
+          "dico:getRequest": {
+            "$": {
+              "xmlns:dico": "http://www.edf.fr/psc/pscma100/recupererDocumentContractuel/service/v1",
+              "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+              "xsi:schemaLocation": "http://www.edf.fr/psc/pscma100/recupererDocumentContractuel/service/v1 recupererDocumentContractuel.xsd"
+            },
+            "getRequest": {
+              "options": [
+                { "cle": "id", "valeur": "pscedfmoi" },
+                { "cle": 2, "valeur": entries.clients[0].clientId },
+                { "cle": 4, "valeur": bill.number },
+                { "cle": 6, "valeur": "Facture" }
+              ]
+            },
+            "numeroBp": entries.clients[0].clientId,
+            "jeton": data.edfToken
+          }
+        }
 
-    edfRequestPost path, body, (err, result) ->
-        return callback err if err
-        K.logger.info "pdf fetched"
-        base64PDF = getF result['ns:msgReponse'], \
-                    'ns:docubase', 'ns:documentPDF', 'ns:pdf'
-        callback null, base64PDF
+        return _edfRequestOptions path, body
 
+    options.parseoptions = (data) ->
+        return new Promise (resolve, reject) ->
+            parser.parseString data, (err, result) ->
+                return reject 'request error' if err
+
+                base64PDF = getF result['rdc:getResponse'], 'getResponse', \
+                            'docubase', 'documentPDF', 'pdf'
+                resolve { data: base64PDF, contentType: "application/pdf" }
+
+    saveDataAndFile(logger, Bill, options, ['EDF'])(requiredFields, entries, data, callback)
 
 ##
 # Edelia
@@ -1119,20 +1108,18 @@ fetchEdeliaGasIndexes = (requiredFields, entries, data, callback) ->
 
         callback error
 
-##
-
 
 prepareEntries = (requiredFields, entries, data, next) ->
     entries.homes = []
     entries.consumptionstatements = []
     entries.contracts = []
-    entries.bills = []
+    entries.fetched = []
     entries.clients = []
     entries.paymenttermss = []
     next()
 
 buildNotifContent = (requiredFields, entries, data, next) ->
-    # data.updated: we don't sepak about update, beacause we don't now if the
+    # data.updated: we don't speak about update, beacause we don't now if the
     # update actually changes the data or not.
 
     # Signal all add of document.
@@ -1148,63 +1135,6 @@ buildNotifContent = (requiredFields, entries, data, next) ->
         entries.notifContent = addedList.join ', '
 
     next()
-
-
-createNewFile = (data, file, callback) ->
-    attachBinary = (newFile) ->
-
-        # Here file is a stream. For some weird reason, request-json requires
-        # that a path field should be set before uploading.
-        file.path = data.name
-        newFile.attachBinary file, {"name": "file"}, (err, res, body) ->
-            upload = false
-            if err
-                newFile.destroy (error) ->
-                    callback 'file error'
-            else
-                callback null, newFile
-
-    # Create file document then attach file stream as binary to that file
-    # document.
-    File.create data, (err, newFile) ->
-        if err
-            K.logger.error err
-            callback 'file error'
-        else
-            attachBinary newFile
-
-
-saveMissingBills = (requiredFields, entries, data, callback) ->
-    Bill.all (err, bills) ->
-        async.eachSeries bills, (bill, cb) ->
-            return cb() if ((bill.vendor isnt 'EDF') or bill.fileId)
-
-            fetchPDF data.edfToken, entries.clients[0], bill.number
-            , (err, base64String) ->
-                return cb err if err
-
-                binaryBill = new Buffer base64String, 'base64'
-                name = moment(bill.date).format('YYYY-MM-DD')
-                name += '-facture_EDF.pdf'
-                file = new File
-                    name: name
-                    mime: "application/pdf"
-                    creationDate: new Date().toISOString()
-                    lastModification: new Date().toISOString()
-                    class: "document"
-                    path: requiredFields.folderPath
-                    size: binaryBill.length
-
-                Folder.mkdirp requiredFields.folderPath, (err) ->
-                    return cb 'file error' if err
-                    createNewFile file, binaryBill, (err, file) ->
-                        return cb 'file error' if err
-                        bill.updateAttributes
-                            fileId: file._id
-                            binaryId: file.binary?.file.id
-                        , cb
-        , callback
-
 
 
 displayData = (requiredFields, entries, data, next) ->
@@ -1282,7 +1212,7 @@ K = module.exports = BaseKonnector.createNew
         fetchVisualiserPartenaire
         fetchVisualiserAccordCommercial
         fetchVisualiserCalendrierPaiement
-        fetchRecupereDocumentContractuelListx
+        fetchVisualiserFacture
         fetchVisualiserHistoConso
 
         fetchEdeliaData
@@ -1293,9 +1223,9 @@ K = module.exports = BaseKonnector.createNew
         updateOrCreate logger, Home, ['pdl']
         updateOrCreate logger, ConsumptionStatement, ['contractNumber',
             'statementType', 'statementReason', 'statementCategory', 'start']
-        updateOrCreate logger, Bill, ['vendor', 'number']
-        #saveMissingBills
-        #buildNotifContent
+        #displayData
+        filterExisting logger, Bill, undefined, 'EDF'
+        saveBills
     ]
 
 # Helpers
@@ -1326,23 +1256,28 @@ edfRequestPost = (path, body, callback) ->
         _edfRequestPost(path, body, cb)
     , callback
 
-_edfRequestPost = (path, body, callback) ->
-    K.logger.debug "called edfRequestPost"
+_edfRequestOptions = (path, body) ->
     xmlBody = builder.buildObject body
-    request
-        url: 'https://rce-mobile.edf.com' + path
+    options =
+        #url: 'https://rce-mobile.edf.com' + path
+        url: DOMAIN + path
         method: 'POST'
         headers:
             # Server needs Capitalize headers, and request use lower case...
-            'Host': 'rce-mobile.edf.com'
-            'Content-Type': 'application/xml'
-            'Authorization': 'Basic ' +
-                'QUVMTU9CSUxFX0FuZHJvaWRfVjE6QUVMTU9CSUxFX0FuZHJvaWRfVjE='
-            'Accept-Encoding': 'gzip'
+            #'Host': 'rce-mobile.edf.com'
+            'Host': 'ws-mobile-particuliers.edf.com'
+            'Content-Type': 'text/xml'
+            'Authorization': 'Basic ' + 'QUVMTU9CSUxFX2lQaG9uZV9WMTpBRUxNT0JJTEVfaVBob25lX1Yx'
+            'Accept-Encoding': 'gzip, deflate'
             'Content-Length': xmlBody.length
         body: xmlBody
         gzip: true
-    , (err, response, data) ->
+
+    return options
+
+_edfRequestPost = (path, body, callback) ->
+    K.logger.debug "called edfRequestPost"
+    request _edfRequestOptions(path, body), (err, response, data) ->
         K.logger.error JSON.stringify(err) if err
         return callback 'request error' if err
         parser.parseString data, (err, result) ->

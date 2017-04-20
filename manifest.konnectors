@@ -1,10 +1,10 @@
 {
   "version": "1.0.0",
-  "name": "konnector name",
+  "name": "EDF",
   "type": "node",
-  "slug": "konnectorslug",
+  "slug": "edf",
   "description": "description",
-  "source": "git://github.com/cozy/cozy-konnector-thename.git",
+  "source": "git@gitlab.cozycloud.cc:gjacquart/connecteur-edf.git",
   "locales": {
     "fr": {
       "description": "Récupère toutes vos factures",
@@ -26,6 +26,26 @@
     "files": {
       "description": "Required to save the bills",
       "type": "io.cozy.files"
+    },
+    "client": {
+      "description": "Import your Client information, from EDF.",
+      "type": "org.fing.mesinfos.client"
+    },
+    "Contract": {
+      "description": "Import information about your contracts from EDF.",
+      "type": "org.fing.mesinfos.contract"
+    },
+    "PaymentTerms": {
+      "description": "Import payment modalities from EDF.",
+      "type": "org.fing.mesinfos.paymentterms"
+    },
+    "Home": {
+      "description": "Import some data about your home from EDF.",
+      "type": "org.fing.mesinfos.home"
+    },
+    "ConsumptionStatement": {
+      "description": "Import energy consumption data from EDF in your Cozy.",
+      "type": "org.fing.mesinfos.consumptionstatement"
     }
   },
   "developer": {
