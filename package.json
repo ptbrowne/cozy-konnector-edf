@@ -21,7 +21,8 @@
     "predev": "env-cmd ./data/env.js cozy-authenticate manifest.konnectors",
     "dev": "env-cmd ./data/env.js npm start",
     "standalone": "env-cmd ./data/env_standalone.js npm start",
-    "build": "coffee -c konnector.coffee"
+    "build": "coffee -c konnector.coffee",
+    "watch": "coffee -c -w konnector.coffee"
   },
   "devDependencies": {
     "coffee-script": "^1.12.5",
