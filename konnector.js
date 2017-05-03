@@ -29,10 +29,10 @@ const logger = require("printit")({
 const DOMAIN = "https://ws-mobile-particuliers.edf.com";
 // Requests
 
-let getEDFToken = function(requiredFields, entries, data, callback) {
+const getEDFToken = function(requiredFields, entries, data, callback) {
   K.logger.info("getEDFToken");
-  let path = "/ws/authentifierUnClientParticulier_rest_V3-0/invoke";
-  let body = {
+  const path = "/ws/authentifierUnClientParticulier_rest_V3-0/invoke";
+  const body = {
     "tns:msgRequete": {
       $: {
         "xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
@@ -54,7 +54,7 @@ let getEDFToken = function(requiredFields, entries, data, callback) {
       return callback(err);
     }
 
-    let errorCode = getF(
+    const errorCode = getF(
       result["tns:msgReponse"],
       "tns:enteteSortie",
       "ent:codeRetour"
@@ -63,7 +63,7 @@ let getEDFToken = function(requiredFields, entries, data, callback) {
       K.logger.error(getF(result, "tns:enteteSortie", "ent:libelleRetour "));
     }
 
-    let token = getF(result["tns:msgReponse"], "tns:corpsSortie", "tns:jeton");
+    const token = getF(result["tns:msgReponse"], "tns:corpsSortie", "tns:jeton");
 
     if (token != null) {
       K.logger.info("EDF token fetched");
@@ -76,7 +76,7 @@ let getEDFToken = function(requiredFields, entries, data, callback) {
   });
 };
 
-let fetchListerContratClientParticulier = function(
+const fetchListerContratClientParticulier = function(
   reqFields,
   entries,
   data,
@@ -84,8 +84,8 @@ let fetchListerContratClientParticulier = function(
 ) {
   K.logger.info("fetch listerContratClientParticulier");
 
-  let path = "/ws/listerContratClientParticulier_rest_V3-0/invoke";
-  let body = {
+  const path = "/ws/listerContratClientParticulier_rest_V3-0/invoke";
+  const body = {
     "tns:msgRequete": {
       $: {
         "xmlns:tns": "http://www.edf.fr/commerce/passerelle/pas072/listerContratClientParticulier/service/v3",
@@ -102,7 +102,7 @@ let fetchListerContratClientParticulier = function(
       return callback(err);
     }
     try {
-      let errorCode = getF(
+      const errorCode = getF(
         result["tns:msgReponse"],
         "tns:EnteteSortie",
         "tns:CodeErreur"
@@ -119,12 +119,12 @@ let fetchListerContratClientParticulier = function(
         return callback("request error");
       }
 
-      let client = {
+      const client = {
         vendor: "EDF",
         docTypeVersion: K.docTypeVersion
       };
 
-      let resBody = getF(
+      const resBody = getF(
         result["tns:msgReponse"],
         "tns:CorpsSortie",
         "tns:AccordCo"
@@ -133,18 +133,18 @@ let fetchListerContratClientParticulier = function(
       // numeroAcc and numeroBD are mandatory.
       client.numeroAcc = getF(resBody, "tns:Numero");
 
-      let bpObject = getF(resBody, "tns:BP");
+      const bpObject = getF(resBody, "tns:BP");
       client.clientId = getF(bpObject, "tns:Numero");
 
       // Put address in cozy-contact like format, two lines :
       // First: Postbox, appartment and street adress on first
       // Second: Locality, region, postcode, country
-      let addressObject = getF(resBody, "tns:Adresse");
+      const addressObject = getF(resBody, "tns:Adresse");
       if (addressObject) {
-        let numRue = getF(addressObject, "tns:NumRue") || "";
-        let nomRue = getF(addressObject, "tns:NomRue") || "";
-        let codePostal = getF(addressObject, "tns:CodePostal") || "";
-        let ville = getF(addressObject, "tns:Ville") || "";
+        const numRue = getF(addressObject, "tns:NumRue") || "";
+        const nomRue = getF(addressObject, "tns:NomRue") || "";
+        const codePostal = getF(addressObject, "tns:CodePostal") || "";
+        const ville = getF(addressObject, "tns:Ville") || "";
 
         client.address = {
           street: `${numRue} ${nomRue}`,
@@ -156,10 +156,10 @@ let fetchListerContratClientParticulier = function(
       }
 
       // name in cozy-contact like format !
-      let identiteObj = getF(bpObject, "tns:Identite");
-      let civilite = getF(identiteObj, "tns:Civilite") || "";
-      let nom = getF(identiteObj, "tns:Nom") || "";
-      let prenom = getF(identiteObj, "tns:Prenom") || "";
+      const identiteObj = getF(bpObject, "tns:Identite");
+      const civilite = getF(identiteObj, "tns:Civilite") || "";
+      const nom = getF(identiteObj, "tns:Nom") || "";
+      const prenom = getF(identiteObj, "tns:Prenom") || "";
       client.name = {
         prefix: civilite,
         family: nom,
@@ -167,9 +167,9 @@ let fetchListerContratClientParticulier = function(
         formated: `${prenom} ${nom}`
       };
 
-      let coTitulaireElem = getF(bpObject, "tns:IdentitePart");
+      const coTitulaireElem = getF(bpObject, "tns:IdentitePart");
       if (coTitulaireElem) {
-        let coHolder = {
+        const coHolder = {
           family: getF(coTitulaireElem, "tns:NomCoTitulaire"),
           given: getF(coTitulaireElem, "tns:PrenomCoTitulaire")
         };
@@ -182,11 +182,11 @@ let fetchListerContratClientParticulier = function(
       client.cellPhone = getF(bpObject, "tns:Coordonnees", "tns:NumTelMobile");
 
       // Contracts
-      let contratElems = resBody["tns:Contrat"];
+      const contratElems = resBody["tns:Contrat"];
 
-      let contracts = contratElems.map(function(contratElem) {
+      const contracts = contratElems.map(function(contratElem) {
         let services;
-        let contract = {
+        const contract = {
           vendor: "EDF",
           clientId: client.clientId,
           docTypeVersion: K.docTypeVersion
@@ -194,7 +194,7 @@ let fetchListerContratClientParticulier = function(
 
         contract.number = getF(contratElem, "tns:Numero");
         contract.pdl = getF(contratElem, "tns:NumeroPDL");
-        let vieContratObj = getF(contratElem, "tns:VieDuContrat");
+        const vieContratObj = getF(contratElem, "tns:VieDuContrat");
         contract.start = getF(vieContratObj, "tns:DateDebut");
         contract.status = getF(vieContratObj, "tns:Statut");
 
@@ -204,7 +204,7 @@ let fetchListerContratClientParticulier = function(
           "tns:MotifResiliation"
         );
 
-        let offreSouscriteObj = getF(contratElem, "tns:OffreSouscrite");
+        const offreSouscriteObj = getF(contratElem, "tns:OffreSouscrite");
 
         contract.energie = translate(
           {
@@ -277,9 +277,9 @@ let fetchListerContratClientParticulier = function(
             break;
         }
 
-        let cadranElem = getF(contratElem, "tns:ListeCadran");
+        const cadranElem = getF(contratElem, "tns:ListeCadran");
         if (cadranElem) {
-          let counter = {};
+          const counter = {};
           counter.comptage = getF(cadranElem, "tns:Type");
           counter.nombreRoues = getF(cadranElem, "tns:NombreRoues");
           counter.dernierIndex = getF(cadranElem, "tns:DernierIndex");
@@ -304,10 +304,10 @@ let fetchListerContratClientParticulier = function(
           "tns:HorrairesHC"
         );
 
-        let releveElem = getF(contratElem, "tns:Releve");
+        const releveElem = getF(contratElem, "tns:Releve");
 
         if (releveElem) {
-          let statement = {};
+          const statement = {};
           statement.prochaineReleve = getF(
             releveElem,
             "tns:ProchaineDateReleveReelle"
@@ -343,7 +343,7 @@ let fetchListerContratClientParticulier = function(
           services = contratElem["tns:ServicesSouscrits"].map(function(
             serviceElem
           ) {
-            let service = {
+            const service = {
               nom: getF(serviceElem, "tns:NomService"),
               activ: getF(serviceElem, "tns:Etat")
             };
@@ -356,7 +356,7 @@ let fetchListerContratClientParticulier = function(
           services = resBody["tns:ServicesSouscrits"].map(function(
             serviceElem
           ) {
-            let service = {
+            const service = {
               nom: getF(serviceElem, "tns:nomService"),
               // TODO : to UTC
               start: getF(serviceElem, "tns:dateSouscription"),
@@ -383,7 +383,7 @@ let fetchListerContratClientParticulier = function(
   });
 };
 
-let fetchVisualiserPartenaire = function(
+const fetchVisualiserPartenaire = function(
   requiredFields,
   entries,
   data,
@@ -391,8 +391,8 @@ let fetchVisualiserPartenaire = function(
 ) {
   K.logger.info("fetchVisualiserPartenaire");
 
-  let path = "/ws/visualiserPartenaire_rest_V2-0/invoke";
-  let body = {
+  const path = "/ws/visualiserPartenaire_rest_V2-0/invoke";
+  const body = {
     msgRequete: {
       $: {
         "xsi:schemaLocation": "http://www.edf.fr/commerce/passerelle/" +
@@ -421,33 +421,33 @@ let fetchVisualiserPartenaire = function(
       return callback(err);
     }
     try {
-      let errorCode = getF(result, "ns:enteteSortie", "ent:codeRetour");
+      const errorCode = getF(result, "ns:enteteSortie", "ent:codeRetour");
       if (errorCode && errorCode !== "0") {
         K.logger.error(getF(result, "tns:enteteSortie", "tns:libelleRetour"));
 
         return callback(); // Continue on error.
       }
 
-      let partnerElem = getF(
+      const partnerElem = getF(
         result["ns:msgReponse"],
         "ns:corpsSortie",
         "ns:partenaire"
       );
-      let client = {};
-      let coordonneesElem = getF(partnerElem, "ns:coordonnees");
+      const client = {};
+      const coordonneesElem = getF(partnerElem, "ns:coordonnees");
       client.cellPhone = getF(coordonneesElem, "ns:NumTelMobile");
       client.homePhone = getF(coordonneesElem, "ns:NumTelFixe");
       client.email = getF(coordonneesElem, "ns:Email");
       client.loginEmail = getF(coordonneesElem, "ns:EmailAEL");
 
-      let contactElem = getF(partnerElem, "ns:centreContact");
-      let contact = {};
+      const contactElem = getF(partnerElem, "ns:centreContact");
+      const contact = {};
       contact.title = getF(contactElem, "ns:gsr");
       contact.phone = getF(contactElem, "ns:telephone");
 
-      let addressElem = getF(contactElem, "ns:adresse");
+      const addressElem = getF(contactElem, "ns:adresse");
       if (addressElem) {
-        let address = {};
+        const address = {};
         address.street = getF(addressElem, "ns:nomRue");
         address.postcode = getF(addressElem, "ns:codePostal");
         address.city = getF(addressElem, "ns:ville");
@@ -470,7 +470,7 @@ let fetchVisualiserPartenaire = function(
   });
 };
 
-let fetchVisualiserAccordCommercial = function(
+const fetchVisualiserAccordCommercial = function(
   requiredFields,
   entries,
   data,
@@ -478,8 +478,8 @@ let fetchVisualiserAccordCommercial = function(
 ) {
   K.logger.info("fetchVisualiserAccordCommercial");
 
-  let path = "/ws/visualiserAccordCommercial_rest_sso_V3-0/invoke";
-  let body = {
+  const path = "/ws/visualiserAccordCommercial_rest_sso_V3-0/invoke";
+  const body = {
     visualiserAccordCommercialRequest: {
       $: {
         xmlns: "http://www.edf.fr/psc/0122/v3/visualiserAccordCommercial",
@@ -498,7 +498,7 @@ let fetchVisualiserAccordCommercial = function(
       return callback(err);
     }
     try {
-      let errorCode = getF(
+      const errorCode = getF(
         result["tns:visualiserAccordCommercialResponse"],
         "tns:responseWebService",
         "tns:CodeEtatService"
@@ -515,26 +515,26 @@ let fetchVisualiserAccordCommercial = function(
         return callback(); // Continue on error.
       }
 
-      let acoElem = getF(
+      const acoElem = getF(
         result["tns:visualiserAccordCommercialResponse"],
         "tns:responseWebService",
         "tns:listeAccordsCommerciaux",
         "tns:item"
       );
 
-      let paymentTerms = {
+      const paymentTerms = {
         vendor: "EDF",
         clientId: entries.clients[0].clientId,
         docTypeVersion: K.docTypeVersion
       };
 
-      let bankDetails = {
+      const bankDetails = {
         iban: getF(acoElem, "tns:banque", "tns:iban"),
         holder: getF(acoElem, "tns:compte", "tns:titulaire"),
         bank: getF(acoElem, "tns:banque", "tns:nom")
       };
 
-      let bankAddress = {
+      const bankAddress = {
         street: getF(acoElem, "tns:banque", "tns:numNomRue"),
         city: getF(acoElem, "tns:banque", "tns:codePostalVille"),
         // postcode ?
@@ -576,9 +576,9 @@ let fetchVisualiserAccordCommercial = function(
       paymentTerms.payerDivergent = getF(acoElem, "tns:payeurDivergent");
       // paymentTerms.mensuSansSurprise = getF acoElem, 'tns:mensuSansSurprise'
 
-      let servicesElem = getF(acoElem, "tns:services")["tns:item"];
-      let services = servicesElem.map(function(serviceElem) {
-        let service = {};
+      const servicesElem = getF(acoElem, "tns:services")["tns:item"];
+      const services = servicesElem.map(function(serviceElem) {
+        const service = {};
         service.name = getF(serviceElem, "tns:nomService");
         service.status = getF(serviceElem, "tns:etat");
         service.valueSubscribed = getF(serviceElem, "tns:valeurSouscrite");
@@ -602,15 +602,15 @@ let fetchVisualiserAccordCommercial = function(
   });
 };
 
-let fetchVisualiserCalendrierPaiement = function(
+const fetchVisualiserCalendrierPaiement = function(
   requiredFields,
   entries,
   data,
   callback
 ) {
   K.logger.info("fetchVisualiserCalendrierPaiement");
-  let path = "/ws/visualiserCalendrierPaiement_rest_V2-0/invoke";
-  let body = {
+  const path = "/ws/visualiserCalendrierPaiement_rest_V2-0/invoke";
+  const body = {
     "message:msgRequete": {
       $: {
         "xsi:schemaLocation": "http://www.edf.fr/commerce/passerelle/" +
@@ -642,7 +642,7 @@ let fetchVisualiserCalendrierPaiement = function(
     }
     try {
       // Does API send an error ?
-      let errorCode = getF(
+      const errorCode = getF(
         result,
         "ns:msgReponse",
         "ns:enteteSortie",
@@ -673,7 +673,7 @@ let fetchVisualiserCalendrierPaiement = function(
       listeEcheances = listeEcheances["ns:listeEcheances"];
 
       // TODO : if no gaz and elec !?
-      let paymentSchedules = listeEcheances.map(function(echeance) {
+      const paymentSchedules = listeEcheances.map(function(echeance) {
         let amountGaz = parseFloat(getF(echeance, "ns:montantGaz"));
         let amountElec = parseFloat(getF(echeance, "ns:montantElec"));
 
@@ -684,7 +684,7 @@ let fetchVisualiserCalendrierPaiement = function(
           amountElec = 0;
         }
 
-        let doc = {
+        const doc = {
           number: parseInt(getF(echeance, "ns:numeroEcheance")),
           receiptDate: getF(echeance, "ns:dateEncaissement"),
           scheduleDate: getF(echeance, "ns:DateEcheance"),
@@ -718,10 +718,10 @@ let fetchVisualiserCalendrierPaiement = function(
   });
 };
 
-let fetchVisualiserFacture = function(reqFields, entries, data, callback) {
+const fetchVisualiserFacture = function(reqFields, entries, data, callback) {
   K.logger.info("fetchVisualiserFacture");
-  let path = "/ws/visualiserFacture_rest_V3-0/invoke";
-  let body = {
+  const path = "/ws/visualiserFacture_rest_V3-0/invoke";
+  const body = {
     "tns:msgRequete": {
       $: {
         "xmlns:tns": "http://www.edf.fr/commerce/passerelle/pas023/visualiserFacture/service/v2"
@@ -742,7 +742,7 @@ let fetchVisualiserFacture = function(reqFields, entries, data, callback) {
 
     let bills = [];
     try {
-      let errorCode = getF(
+      const errorCode = getF(
         result["tns:msgReponse"],
         "visualiserFactureResponse",
         "responseWebService",
@@ -760,7 +760,7 @@ let fetchVisualiserFacture = function(reqFields, entries, data, callback) {
         return callback(); // Continue, whitout error.
       }
 
-      let documents = getF(
+      const documents = getF(
         result["tns:msgReponse"],
         "visualiserFactureResponse",
         "responseWebService",
@@ -768,8 +768,8 @@ let fetchVisualiserFacture = function(reqFields, entries, data, callback) {
       )["item"];
 
       bills = documents.map(function(elem) {
-        let details = getF(elem, "resume");
-        let bill = {
+        const details = getF(elem, "resume");
+        const bill = {
           vendor: "EDF",
           clientId: entries.clients[0].clientId,
           title: getF(details, "type"),
@@ -801,7 +801,7 @@ let fetchVisualiserFacture = function(reqFields, entries, data, callback) {
   });
 };
 
-let fetchVisualiserHistoConso = function(
+const fetchVisualiserHistoConso = function(
   requiredFields,
   entries,
   data,
@@ -811,8 +811,8 @@ let fetchVisualiserHistoConso = function(
   return async.mapSeries(
     entries.contracts,
     function(contract, cb) {
-      let path = "/ws/visualiserHistoConso_rest_V3-0/invoke";
-      let body = {
+      const path = "/ws/visualiserHistoConso_rest_V3-0/invoke";
+      const body = {
         "message:msgRequete": {
           $: {
             "xsi:schemaLocation": "http://www.edf.fr/commerce/" +
@@ -843,7 +843,7 @@ let fetchVisualiserHistoConso = function(
           return callback(err);
         }
         try {
-          let errorCode = getF(result, "ns:enteteSortie", "ent:codeRetour");
+          const errorCode = getF(result, "ns:enteteSortie", "ent:codeRetour");
           if (errorCode && errorCode !== "0") {
             K.logger.error(
               getF(result, "tns:enteteSortie", "tns:libelleRetour")
@@ -857,13 +857,13 @@ let fetchVisualiserHistoConso = function(
             return callback(null, []);
           }
 
-          let consoElems =
+          const consoElems =
             result["ns:msgReponse"]["ns:corpsSortie"][0][
               "ns:listeHistoDeConso"
             ];
 
-          let res = consoElems.map(function(consoElem) {
-            let doc = {
+          const res = consoElems.map(function(consoElem) {
+            const doc = {
               contractNumber: contract.number,
               billNumber: getF(consoElem, "ns:numeroFacture"),
               start: getF(consoElem, "ns:dateDebut"),
@@ -906,13 +906,13 @@ let fetchVisualiserHistoConso = function(
   );
 };
 
-let saveBills = function(requiredFields, entries, data, callback) {
-  let options = {};
+const saveBills = function(requiredFields, entries, data, callback) {
+  const options = {};
   options.vendor = "edf";
 
   options.requestoptions = function(bill) {
-    let path = "/ws/recupererDocumentContractuelGet_rest_V1-0/invoke";
-    let body = {
+    const path = "/ws/recupererDocumentContractuelGet_rest_V1-0/invoke";
+    const body = {
       "dico:getRequest": {
         $: {
           "xmlns:dico": "http://www.edf.fr/psc/pscma100/recupererDocumentContractuel/service/v1",
@@ -942,7 +942,7 @@ let saveBills = function(requiredFields, entries, data, callback) {
           return reject("request error");
         }
 
-        let base64PDF = getF(
+        const base64PDF = getF(
           result["rdc:getResponse"],
           "getResponse",
           "docubase",
@@ -965,7 +965,7 @@ let saveBills = function(requiredFields, entries, data, callback) {
 // Edelia
 //#
 
-let fetchEdeliaToken = function(requiredFields, entries, data, callback) {
+const fetchEdeliaToken = function(requiredFields, entries, data, callback) {
   K.logger.info("fetchEdeliaToken");
   return request.post(
     "https://api.edelia.fr/authorization-server/oauth/token",
@@ -993,7 +993,7 @@ let fetchEdeliaToken = function(requiredFields, entries, data, callback) {
   );
 };
 
-let fetchEdeliaProfile = function(requiredFields, entries, data, callback) {
+const fetchEdeliaProfile = function(requiredFields, entries, data, callback) {
   K.logger.info("fetchEdeliaProfile");
   return getEdelia(
     data.edeliaToken,
@@ -1017,7 +1017,7 @@ let fetchEdeliaProfile = function(requiredFields, entries, data, callback) {
           throw new Error("no edelia");
         }
 
-        let doc = {
+        const doc = {
           pdl: data.pdl,
           beginTs: obj.beginTs,
           isProfileValidated: obj.isProfileValidated,
@@ -1048,7 +1048,7 @@ let fetchEdeliaProfile = function(requiredFields, entries, data, callback) {
 // Edelia electricite
 //#
 
-let fetchEdeliaMonthlyElecConsumptions = function(
+const fetchEdeliaMonthlyElecConsumptions = function(
   requiredFields,
   entries,
   data,
@@ -1085,7 +1085,7 @@ let fetchEdeliaMonthlyElecConsumptions = function(
 
         statements = statements.concat(
           obj.monthlyElecEnergies.map(function(mee) {
-            let doc = {
+            const doc = {
               docTypeVersion: K.docTypeVersion,
               contractNumber: data.contract.number,
               start: mee.beginDay,
@@ -1112,7 +1112,7 @@ let fetchEdeliaMonthlyElecConsumptions = function(
 
         statements = statements.concat(
           obj.yearlyElecEnergies.map(function(yee) {
-            let doc = {
+            const doc = {
               docTypeVersion: K.docTypeVersion,
               contractNumber: data.contract.number,
               start: yee.beginDay,
@@ -1151,7 +1151,7 @@ let fetchEdeliaMonthlyElecConsumptions = function(
   );
 };
 
-let fetchEdeliaSimilarHomeYearlyElecComparisions = function(
+const fetchEdeliaSimilarHomeYearlyElecComparisions = function(
   requiredFields,
   entries,
   data,
@@ -1180,7 +1180,7 @@ let fetchEdeliaSimilarHomeYearlyElecComparisions = function(
         }
 
         objs.forEach(function(obj) {
-          let statement = data.consumptionStatementByYear[obj.year];
+          const statement = data.consumptionStatementByYear[obj.year];
           if (!statement) {
             K.logger.warn(`No yearly statement for ${obj.date.year}`);
             return;
@@ -1203,7 +1203,7 @@ let fetchEdeliaSimilarHomeYearlyElecComparisions = function(
   );
 };
 
-let fetchEdeliaElecIndexes = function(requiredFields, entries, data, callback) {
+const fetchEdeliaElecIndexes = function(requiredFields, entries, data, callback) {
   if (data.noEdelia || data.noElec) {
     return callback();
   }
@@ -1227,7 +1227,7 @@ let fetchEdeliaElecIndexes = function(requiredFields, entries, data, callback) {
         }
 
         objs.forEach(function(obj) {
-          let statement =
+          const statement =
             data.consumptionStatementByMonth[obj.date.slice(0, 7)];
           if (!statement) {
             K.logger.warn(
@@ -1256,7 +1256,7 @@ ${obj.date.slice(0, 7)}`
 // Edelia Gas
 //#
 
-let fetchEdeliaMonthlyGasConsumptions = function(
+const fetchEdeliaMonthlyGasConsumptions = function(
   requiredFields,
   entries,
   data,
@@ -1291,7 +1291,7 @@ let fetchEdeliaMonthlyGasConsumptions = function(
 
         statements = obj.monthlyGasEnergies != null
           ? obj.monthlyGasEnergies.map(function(mee) {
-              let doc = {
+              const doc = {
                 docTypeVersion: K.docTypeVersion,
                 contractNumber: data.contract.number,
                 start: mee.beginDay,
@@ -1318,7 +1318,7 @@ let fetchEdeliaMonthlyGasConsumptions = function(
 
         statements = statements.concat(
           obj.yearlyGasEnergies.map(function(yee) {
-            let doc = {
+            const doc = {
               docTypeVersion: K.docTypeVersion,
               contractNumber: data.contract.number,
               start: yee.beginDay,
@@ -1357,7 +1357,7 @@ let fetchEdeliaMonthlyGasConsumptions = function(
   );
 };
 
-let fetchEdeliaSimilarHomeYearlyGasComparisions = function(
+const fetchEdeliaSimilarHomeYearlyGasComparisions = function(
   requiredFields,
   entries,
   data,
@@ -1386,7 +1386,7 @@ let fetchEdeliaSimilarHomeYearlyGasComparisions = function(
         }
 
         objs.forEach(function(obj) {
-          let statement = data.consumptionStatementByYear[obj.year];
+          const statement = data.consumptionStatementByYear[obj.year];
           if (!statement) {
             K.logger.warn(`No yearly statement for ${obj.date.year}`);
             return;
@@ -1409,7 +1409,7 @@ let fetchEdeliaSimilarHomeYearlyGasComparisions = function(
   );
 };
 
-let fetchEdeliaGasIndexes = function(requiredFields, entries, data, callback) {
+const fetchEdeliaGasIndexes = function(requiredFields, entries, data, callback) {
   if (data.noEdelia || data.noGas) {
     return callback();
   }
@@ -1434,7 +1434,7 @@ let fetchEdeliaGasIndexes = function(requiredFields, entries, data, callback) {
         }
 
         objs.forEach(function(obj) {
-          let statement =
+          const statement =
             data.consumptionStatementByMonth[obj.date.slice(0, 7)];
           if (!statement) {
             K.logger.warn(
@@ -1457,7 +1457,7 @@ ${obj.date.slice(0, 7)}`
   );
 };
 
-let prepareEntries = function(requiredFields, entries, data, next) {
+const prepareEntries = function(requiredFields, entries, data, next) {
   entries.homes = [];
   entries.consumptionstatements = [];
   entries.contracts = [];
@@ -1467,16 +1467,16 @@ let prepareEntries = function(requiredFields, entries, data, next) {
   return next();
 };
 
-let buildNotifContent = function(requiredFields, entries, data, next) {
+const buildNotifContent = function(requiredFields, entries, data, next) {
   // data.updated: we don't speak about update, beacause we don't now if the
   // update actually changes the data or not.
 
   // Signal all add of document.
-  let addedList = [];
-  for (let docsName in data.created) {
-    let count = data.created[docsName];
+  const addedList = [];
+  for (const docsName in data.created) {
+    const count = data.created[docsName];
     if (count > 0) {
-      let message = localization.t(`notification ${docsName}`, {
+      const message = localization.t(`notification ${docsName}`, {
         smart_count: count
       });
 
@@ -1492,7 +1492,7 @@ let buildNotifContent = function(requiredFields, entries, data, next) {
   return next();
 };
 
-let displayData = function(requiredFields, entries, data, next) {
+const displayData = function(requiredFields, entries, data, next) {
   K.logger.info("display data");
   K.logger.info(JSON.stringify(entries, null, 2));
   K.logger.info(JSON.stringify(data, null, 2));
@@ -1500,13 +1500,13 @@ let displayData = function(requiredFields, entries, data, next) {
   return next();
 };
 
-let fetchEdeliaData = (requiredFields, entries, data, next) =>
+const fetchEdeliaData = (requiredFields, entries, data, next) =>
   async.eachSeries(
     entries.contracts,
     function(contract, callback) {
       data.contract = contract;
-      let importer = fetcher.new();
-      let operations = [
+      const importer = fetcher.new();
+      const operations = [
         fetchEdeliaToken,
         fetchEdeliaProfile,
         fetchEdeliaMonthlyElecConsumptions,
@@ -1597,8 +1597,8 @@ var K = (module.exports = BaseKonnector.createNew({
 // Helpers
 
 var _extend = function(a, b) {
-  for (let k in b) {
-    let v = b[k];
+  for (const k in b) {
+    const v = b[k];
     if (v != null) {
       a[k] = v;
     }
@@ -1608,7 +1608,7 @@ var _extend = function(a, b) {
 
 var getF = function(node, ...fields) {
   try {
-    for (let field of Array.from(fields)) {
+    for (const field of Array.from(fields)) {
       node = node[field][0];
     }
   } catch (e) {
@@ -1633,8 +1633,8 @@ var edfRequestPost = (path, body, callback) =>
   );
 
 var _edfRequestOptions = function(path, body) {
-  let xmlBody = builder.buildObject(body);
-  let options = {
+  const xmlBody = builder.buildObject(body);
+  const options = {
     //url: 'https://rce-mobile.edf.com' + path
     url: DOMAIN + path,
     method: "POST",
