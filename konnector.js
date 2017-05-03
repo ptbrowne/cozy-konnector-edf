@@ -206,7 +206,8 @@ let fetchListerContratClientParticulier = function(
 
         let offreSouscriteObj = getF(contratElem, "tns:OffreSouscrite");
 
-        contract.energie = translate({
+        contract.energie = translate(
+          {
             ELECTRICITE: "Électricité",
             GAZ: "Gaz"
           },
