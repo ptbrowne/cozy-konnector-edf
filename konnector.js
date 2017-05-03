@@ -1,27 +1,27 @@
-let xml2js = require("xml2js");
-let request = require("request");
-let async = require("async");
-let moment = require("moment");
+const xml2js = require("xml2js");
+const request = require("request");
+const async = require("async");
+const moment = require("moment");
 
-let updateOrCreate = require("./lib/update_or_create");
+const updateOrCreate = require("./lib/update_or_create");
 // TODO localization = require '../lib/localization_manager'
-let konnectorLibs = require("cozy-konnector-libs");
-let { fetcher } = konnectorLibs;
-let BaseKonnector = konnectorLibs.baseKonnector;
+const konnectorLibs = require("cozy-konnector-libs");
+const { fetcher, filterExisting } = konnectorLibs;
+const BaseKonnector = konnectorLibs.baseKonnector;
 
-let saveDataAndFile = require("./lib/save_data_and_file");
-let { filterExisting } = konnectorLibs;
-let Bill = konnectorLibs.models.bill;
-let Client = require("./models/client");
-let Contract = require("./models/contract");
-let PaymentTerms = require("./models/payment_terms");
-let ConsumptionStatement = require("./models/consumption_statement");
-let Home = require("./models/home");
+const saveDataAndFile = require("./lib/save_data_and_file");
+const Bill = konnectorLibs.models.bill;
 
-let parser = new xml2js.Parser();
-let builder = new xml2js.Builder({ headless: true });
+const Client = require("./models/client");
+const Contract = require("./models/contract");
+const PaymentTerms = require("./models/payment_terms");
+const ConsumptionStatement = require("./models/consumption_statement");
+const Home = require("./models/home");
 
-let logger = require("printit")({
+const parser = new xml2js.Parser();
+const builder = new xml2js.Builder({ headless: true });
+
+const logger = require("printit")({
   prefix: "EDF",
   date: true
 });
