@@ -16,7 +16,7 @@ module.exports = baseModel.createNew({
     // period: String # Simple designation of the temporal period of statement.
     // cost: Number # Cost
     // costsByCategory: Object # Details on costs
-    // valuesByCatergory: Object # Details on values
+    // valuesByCategory: Object # Details on values
     // similarHomes: Object # Similar home consumption comparisons.
     // statements: [Object] # List of statement occured in this period.
     // docTypeVersion: String

@@ -834,7 +834,7 @@ requiredFields, entries, data, callback) ->
                     period: mee.month
                     cost: mee.totalCost
                     costsByCategory: mee.consumption.costsByTariffHeading
-                    valuesByCatergory: mee.consumption.energiesByTariffHeading
+                    valuesByCategory: mee.consumption.energiesByTariffHeading
 
                 doc.costsByCategory.standing = mee.standingCharge
                 data.consumptionStatementByMonth[mee.month] = doc
@@ -857,7 +857,7 @@ requiredFields, entries, data, callback) ->
                     period: yee.year
                     cost: yee.totalCost
                     costsByCategory: yee.consumption.costsByTariffHeading
-                    valuesByCatergory: yee.consumption.energiesByTariffHeading
+                    valuesByCategory: yee.consumption.energiesByTariffHeading
 
                 doc.costsByCategory.standing = yee.standingCharge
 
