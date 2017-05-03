@@ -119,67 +119,12 @@ const fetchListerContratClientParticulier = function(
         return callback("request error");
       }
 
-      const client = {
-        vendor: "EDF",
-        docTypeVersion: K.docTypeVersion
-      };
-
       const resBody = getF(
         result["tns:msgReponse"],
         "tns:CorpsSortie",
         "tns:AccordCo"
       );
-
-      // numeroAcc and numeroBD are mandatory.
-      client.numeroAcc = getF(resBody, "tns:Numero");
-
-      const bpObject = getF(resBody, "tns:BP");
-      client.clientId = getF(bpObject, "tns:Numero");
-
-      // Put address in cozy-contact like format, two lines :
-      // First: Postbox, appartment and street adress on first
-      // Second: Locality, region, postcode, country
-      const addressObject = getF(resBody, "tns:Adresse");
-      if (addressObject) {
-        const numRue = getF(addressObject, "tns:NumRue") || "";
-        const nomRue = getF(addressObject, "tns:NomRue") || "";
-        const codePostal = getF(addressObject, "tns:CodePostal") || "";
-        const ville = getF(addressObject, "tns:Ville") || "";
-
-        client.address = {
-          street: `${numRue} ${nomRue}`,
-          city: ville,
-          postcode: codePostal,
-          country: "FRANCE",
-          formated: `${numRue} ${nomRue}\n${codePostal} ${ville}`
-        };
-      }
-
-      // name in cozy-contact like format !
-      const identiteObj = getF(bpObject, "tns:Identite");
-      const civilite = getF(identiteObj, "tns:Civilite") || "";
-      const nom = getF(identiteObj, "tns:Nom") || "";
-      const prenom = getF(identiteObj, "tns:Prenom") || "";
-      client.name = {
-        prefix: civilite,
-        family: nom,
-        given: prenom,
-        formated: `${prenom} ${nom}`
-      };
-
-      const coTitulaireElem = getF(bpObject, "tns:IdentitePart");
-      if (coTitulaireElem) {
-        const coHolder = {
-          family: getF(coTitulaireElem, "tns:NomCoTitulaire"),
-          given: getF(coTitulaireElem, "tns:PrenomCoTitulaire")
-        };
-
-        coHolder.formated = `${coHolder.given} ${coHolder.family}`;
-        client.coHolder = coHolder;
-      }
-
-      client.email = getF(bpObject, "tns:Coordonnees", "tns:Email");
-      client.cellPhone = getF(bpObject, "tns:Coordonnees", "tns:NumTelMobile");
+      const client = parseClient(resBody);
 
       // Contracts
       const contratElems = resBody["tns:Contrat"];
@@ -1231,8 +1176,7 @@ const fetchEdeliaElecIndexes = function(requiredFields, entries, data, callback)
             data.consumptionStatementByMonth[obj.date.slice(0, 7)];
           if (!statement) {
             K.logger.warn(
-              `No monthly statement for\
-${obj.date.slice(0, 7)}`
+              `No monthly statement for ${obj.date.slice(0, 7)}`
             );
             return;
           }
@@ -1671,6 +1615,65 @@ var _edfRequestPost = function(path, body, callback) {
     });
   });
 };
+
+function parseClient(resBody) {
+  const client = {
+    vendor: "EDF",
+    docTypeVersion: K.docTypeVersion
+  };
+
+  const bpObject = getF(resBody, "tns:BP");
+
+  // numeroAcc and numeroBD are mandatory.
+  client.numeroAcc = getF(resBody, "tns:Numero");
+  client.clientId = getF(bpObject, "tns:Numero");
+
+  // Put address in cozy-contact like format, two lines :
+  // First: Postbox, appartment and street adress on first
+  // Second: Locality, region, postcode, country
+  const addressObject = getF(resBody, "tns:Adresse");
+  if (addressObject) {
+    const numRue = getF(addressObject, "tns:NumRue") || "";
+    const nomRue = getF(addressObject, "tns:NomRue") || "";
+    const codePostal = getF(addressObject, "tns:CodePostal") || "";
+    const ville = getF(addressObject, "tns:Ville") || "";
+
+    client.address = {
+      street: `${numRue} ${nomRue}`,
+      city: ville,
+      postcode: codePostal,
+      country: "FRANCE",
+      formated: `${numRue} ${nomRue}\n${codePostal} ${ville}`
+    };
+  }
+
+  // name in cozy-contact like format !
+  const identiteObj = getF(bpObject, "tns:Identite");
+  const civilite = getF(identiteObj, "tns:Civilite") || "";
+  const nom = getF(identiteObj, "tns:Nom") || "";
+  const prenom = getF(identiteObj, "tns:Prenom") || "";
+  client.name = {
+    prefix: civilite,
+    family: nom,
+    given: prenom,
+    formated: `${prenom} ${nom}`
+  };
+
+  const coTitulaireElem = getF(bpObject, "tns:IdentitePart");
+  if (coTitulaireElem) {
+    const coHolder = {
+      family: getF(coTitulaireElem, "tns:NomCoTitulaire"),
+      given: getF(coTitulaireElem, "tns:PrenomCoTitulaire")
+    };
+
+    coHolder.formated = `${coHolder.given} ${coHolder.family}`;
+    client.coHolder = coHolder;
+  }
+
+  client.email = getF(bpObject, "tns:Coordonnees", "tns:Email");
+  client.cellPhone = getF(bpObject, "tns:Coordonnees", "tns:NumTelMobile");
+  return client
+}
 
 var getEdelia = (accessToken, path, callback) =>
   request.get(
