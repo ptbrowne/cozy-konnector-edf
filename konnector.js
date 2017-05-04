@@ -343,7 +343,6 @@ const fetchVisualiserAccordCommercial = function(
       //accountNumber: getF acoElem, 'ns:detail', 'ns:numeroEtendu'
       paymentTerms.nextBillDate = getF(acoElem)
 
-      paymentTerms.idPayer = getF(acoElem, 'tns:numeroPayeur')
       // paymentTerms.mensuSansSurprise = getF acoElem, 'tns:mensuSansSurprise'
 
       const servicesElem = getFAccordCom('tns:services')['tns:item']
