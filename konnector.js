@@ -26,6 +26,48 @@ const logger = require('printit')({
   date: true
 })
 
+const CONTRACT_CODES = {
+  GN_2: 'Offre Gaz naturel',
+  MCGN_2: 'Mon Contrat gaz naturel',
+  MCGN_PRIX_FIXE_1: 'Mon Contrat Gaz Naturel a prix fixe',
+  ELECTRICITE_PRO: 'Electricite Pro',
+  ELEC_DEREGULE: 'Mon Contrat Electricite',
+  ELEC_PRO_PX_FIXE_1: 'Electricite Pro a Prix Fixe',
+  ESSENTIEL_PRO: 'Essentiel Pro',
+  OFFRE_HC_SOUPLES: 'Heures Creuses Souples',
+  PRESENCE_PRO: 'Presence Pro',
+  SOUPLESSE_PRO: 'Souplesse Pro',
+  TARIF_BLEU: 'Tarif Bleu',
+  TARIF_BLEU_PART: 'Tarif Bleu',
+  ESSENTIEL_GAZ: 'Essentiel Gaz',
+  GAZ: 'Mon Contrat Gaz Naturel',
+  GAZ_2: 'Mon Contrat Gaz Naturel',
+  GAZ_NAT_PX_FIXE_1: 'Gaz Naturel a Prix Fixe',
+  PRESENCE_GAZ: 'Presence Gaz',
+  SOUPLESSE_GAZ: 'Souplesse Gaz',
+  TARIF_BLEU_GAZ: 'Gaz Naturel',
+  TARIF_EJP_PART: 'EJP',
+  OFFRE_TPN: 'TPN'
+}
+
+const POWER_CODES = {
+  PUI00: '0 kVA',
+  PUI03: '3 kVA',
+  PUI06: '6 kVA',
+  PUI09: '9 kVA',
+  PUI12: '12 kVA',
+  PUI15: '15 kVA',
+  PUI18: '18 kVA',
+  PUI24: '24 kVA',
+  PUI30: '30 kVA',
+  PUI36: '36 kVA'
+}
+
+const ENERGY_CODES = {
+  ELECTRICITE: 'Électricité',
+  GAZ: 'Gaz'
+}
+
 const DOMAIN = 'https://ws-mobile-particuliers.edf.com'
 // Requests
 
@@ -102,223 +144,25 @@ const fetchListerContratClientParticulier = function(
       return callback(err)
     }
     try {
-      const errorCode = getF(
-        result['tns:msgReponse'],
-        'tns:EnteteSortie',
-        'tns:CodeErreur'
-      )
+      const response = result['tns:msgReponse']
+      const errorCode = getF(response, 'tns:EnteteSortie', 'tns:CodeErreur')
       if (errorCode && errorCode !== 'PSC0000') {
-        K.logger.error(
-          getF(
-            result['tns:mgsReponse'],
-            'tns:EnteteSortie',
-            'tns:LibelleErreur'
-          )
-        )
+        K.logger.error(getF(response, 'tns:EnteteSortie', 'tns:LibelleErreur'))
 
         return callback('request error')
       }
 
-      const resBody = getF(
-        result['tns:msgReponse'],
-        'tns:CorpsSortie',
-        'tns:AccordCo'
-      )
-      const client = parseClient(resBody)
+      const accords = getF(response, 'tns:CorpsSortie')['tns:AccordCo']
 
-      // Contracts
-      const contratElems = resBody['tns:Contrat']
+      K.logger.info(`Number EDF contracts ${accords.length}`)
 
-      const contracts = contratElems.map(function(contratElem) {
-        let services
-        const contract = {
-          vendor: 'EDF',
-          clientId: client.clientId,
-          docTypeVersion: K.docTypeVersion
-        }
-
-        contract.number = getF(contratElem, 'tns:Numero')
-        contract.pdl = getF(contratElem, 'tns:NumeroPDL')
-        const vieContratObj = getF(contratElem, 'tns:VieDuContrat')
-        contract.start = getF(vieContratObj, 'tns:DateDebut')
-        contract.status = getF(vieContratObj, 'tns:Statut')
-
-        contract.end = getF(vieContratObj, 'tns:DateFin')
-        contract.terminationGrounds = getF(
-          vieContratObj,
-          'tns:MotifResiliation'
-        )
-
-        const offreSouscriteObj = getF(contratElem, 'tns:OffreSouscrite')
-
-        contract.energie = translate(
-          {
-            ELECTRICITE: 'Électricité',
-            GAZ: 'Gaz'
-          },
-          getF(offreSouscriteObj, 'tns:Energie')
-        )
-
-        contract.name = translate(
-          {
-            GN_2: 'Offre Gaz naturel',
-            MCGN_2: 'Mon Contrat gaz naturel',
-            MCGN_PRIX_FIXE_1: 'Mon Contrat Gaz Naturel a prix fixe',
-            ELECTRICITE_PRO: 'Electricite Pro',
-            ELEC_DEREGULE: 'Mon Contrat Electricite',
-            ELEC_PRO_PX_FIXE_1: 'Electricite Pro a Prix Fixe',
-            ESSENTIEL_PRO: 'Essentiel Pro',
-            OFFRE_HC_SOUPLES: 'Heures Creuses Souples',
-            PRESENCE_PRO: 'Presence Pro',
-            SOUPLESSE_PRO: 'Souplesse Pro',
-            TARIF_BLEU: 'Tarif Bleu',
-            TARIF_BLEU_PART: 'Tarif Bleu',
-            ESSENTIEL_GAZ: 'Essentiel Gaz',
-            GAZ: 'Mon Contrat Gaz Naturel',
-            GAZ_2: 'Mon Contrat Gaz Naturel',
-            GAZ_NAT_PX_FIXE_1: 'Gaz Naturel a Prix Fixe',
-            PRESENCE_GAZ: 'Presence Gaz',
-            SOUPLESSE_GAZ: 'Souplesse Gaz',
-            TARIF_BLEU_GAZ: 'Gaz Naturel',
-            TARIF_EJP_PART: 'EJP',
-            OFFRE_TPN: 'TPN'
-          },
-          getF(offreSouscriteObj, 'tns:NomOffre')
-        )
-
-        contract.troubleshootingPhone = getF(
-          offreSouscriteObj,
-          'tns:NumeroDepannageContrat'
-        )
-
-        switch (contract.energie) {
-          case 'Électricité':
-            contract.power = translate(
-              {
-                PUI00: '0 kVA',
-                PUI03: '3 kVA',
-                PUI06: '6 kVA',
-                PUI09: '9 kVA',
-                PUI12: '12 kVA',
-                PUI15: '15 kVA',
-                PUI18: '18 kVA',
-                PUI24: '24 kVA',
-                PUI30: '30 kVA',
-                PUI36: '36 kVA'
-              },
-              getF(offreSouscriteObj, 'tns:Puissance')
-            )
-            contract.contractSubcategory1 = getF(
-              offreSouscriteObj,
-              'tns:StructureTarifaire'
-            )
-            break
-
-          case 'Gaz':
-            contract.contractSubcategory2 = getF(
-              offreSouscriteObj,
-              'tns:OptionPrix'
-            )
-            break
-        }
-
-        const cadranElem = getF(contratElem, 'tns:ListeCadran')
-        if (cadranElem) {
-          const counter = {}
-          counter.comptage = getF(cadranElem, 'tns:Type')
-          counter.nombreRoues = getF(cadranElem, 'tns:NombreRoues')
-          counter.dernierIndex = getF(cadranElem, 'tns:DernierIndex')
-
-          counter.type = getF(
-            contratElem,
-            'tns:DonneesTechniques',
-            'tns:TypeCompteur'
-          )
-
-          contract.counter = counter
-
-          contract.annualConsumption = getF(
-            cadranElem,
-            'tns:ConsommationAnnuelle'
-          )
-        }
-
-        contract.peakHours = getF(
-          contratElem,
-          'tns:DonneesTechniques',
-          'tns:HorrairesHC'
-        )
-
-        const releveElem = getF(contratElem, 'tns:Releve')
-
-        if (releveElem) {
-          const statement = {}
-          statement.prochaineReleve = getF(
-            releveElem,
-            'tns:ProchaineDateReleveReelle'
-          )
-          statement.saisieReleveConfiance = getF(releveElem, 'tns:SaisieRC')
-          statement.dateFermetureReleveConfiance = getF(
-            releveElem,
-            'tns:DateFermetureRC'
-          )
-          statement.prochaineDateOuvertureReleveConfiance = getF(
-            releveElem,
-            'tns:ProchaineDateOuvertureRC'
-          )
-          statement.prochaineDateFermetureReleveConfiance = getF(
-            releveElem,
-            'tns:ProchaineDateFermetureRC'
-          )
-          statement.prochaineDateFermetureReelle = getF(
-            releveElem,
-            'tns:ProchaineDateFermetureReelle'
-          )
-          statement.saisieSuiviConso = getF(releveElem, 'tns:SaisieSC')
-          statement.prochaineDateOuvertureSaisieConso = getF(
-            releveElem,
-            'tns:ProchaineDateOuvertureSC'
-          )
-
-          contract.statement = statement
-        }
-
-        contract.services = []
-        if (contratElem['tns:ServicesSouscrits']) {
-          services = contratElem['tns:ServicesSouscrits'].map(function(
-            serviceElem
-          ) {
-            const service = {
-              nom: getF(serviceElem, 'tns:NomService'),
-              activ: getF(serviceElem, 'tns:Etat')
-            }
-            return service
-          })
-          contract.services = contract.services.concat(services)
-        }
-
-        if (resBody['tns:ServicesSouscrits']) {
-          services = resBody['tns:ServicesSouscrits'].map(function(
-            serviceElem
-          ) {
-            const service = {
-              nom: getF(serviceElem, 'tns:nomService'),
-              // TODO : to UTC
-              start: getF(serviceElem, 'tns:dateSouscription'),
-              activ: getF(serviceElem, 'tns:statut')
-            }
-            return service
-          })
-
-          contract.services = contract.services.concat(services)
-        }
-
-        return contract
+      const clientContracts = accords.map(parseAccord)
+      clientContracts.forEach(({ client, contract }) => {
+        entries.contracts.push(contract)
+        entries.clients.push(client)
       })
 
       K.logger.info('Fetched listerContratClientParticulier')
-      entries.clients.push(client)
-      entries.contracts = contracts
 
       return callback()
     } catch (e) {
@@ -1624,6 +1468,145 @@ var _edfRequestPost = function(path, body, callback) {
   })
 }
 
+function parseAccord(accordObj) {
+  const client = parseClient(accordObj)
+
+  // Contracts
+  const contratElem = accordObj['tns:Contrat'][0]
+  const vieContratObj = getF(contratElem, 'tns:VieDuContrat')
+  const offre = getF(contratElem, 'tns:OffreSouscrite')
+
+  const getFContrat = getF.bind(null, contratElem)
+  const getFVie = getF.bind(null, vieContratObj)
+  const getFOffre = getF.bind(null, offre)
+
+  const energyObj = getFOffre('tns:Energie')
+
+  const contract = {
+    vendor: 'EDF',
+    clientId: client.clientId,
+    docTypeVersion: K.docTypeVersion,
+    number: getFContrat('tns:Numero'),
+    pdl: getFContrat('tns:NumeroPDL'),
+    start: getFVie('tns:DateDebut'),
+    status: getFVie('tns:Statut'),
+    end: getFVie('tns:DateFin'),
+    terminationGrounds: getFVie('tns:MotifResiliation'),
+    energie: translate(ENERGY_CODES, energyObj),
+    name: translate(CONTRACT_CODES, getFOffre('tns:NomOffre')),
+    troubleshootingPhone: getFOffre('tns:NumeroDepannageContrat')
+  }
+
+  switch (contract.energie) {
+    case 'Électricité':
+      contract.power = translate(POWER_CODES, getFOffre('tns:Puissance'))
+      contract.contractSubcategory1 = getFOffre('tns:StructureTarifaire')
+      break
+
+    case 'Gaz':
+      contract.contractSubcategory2 = getFOffre('tns:OptionPrix')
+      break
+  }
+
+  const cadranElem = getFContrat('tns:ListeCadran')
+  if (cadranElem) {
+    contract.counter = {
+      comptage: getFContrat('tns:Type'),
+      nombreRoues: getFContrat('tns:NombreRoues'),
+      dernierIndex: getFContrat('tns:DernierIndex'),
+      type: getFContrat('tns:DonneesTechniques', 'tns:TypeCompteur'),
+      annualConsumption: getF(cadranElem, 'tns:ConsommationAnnuelle'),
+      peakHours: getFContrat('tns:DonneesTechniques', 'tns:HorrairesHC')
+    }
+  }
+  const releveElem = getFContrat('tns:Releve')
+
+  if (releveElem) {
+    const statement = {}
+
+    const releveMapping = {
+      prochaineReleve: 'tns:ProchaineDateReleveReelle',
+      saisieReleveConfiance:'tns:SaisieRC',
+      dateFermetureReleveConfiance:'tns:DateFermetureRC',
+      prochaineDateOuvertureReleveConfiance:'tns:ProchaineDateOuvertureRC',
+      prochaineDateFermetureReleveConfiance:'tns:ProchaineDateFermetureRC',
+      prochaineDateFermetureReelle:'tns:ProchaineDateFermetureReelle',
+      saisieSuiviConso:'tns:SaisieSC',
+      prochaineDateOuvertureSaisieConso:'tns:ProchaineDateOuvertureSC',
+    }
+
+    for (const key of Object.keys(releveMapping)) {
+      statement[key] = getF(releveElem, releveMapping[key])
+    }
+
+    contract.statement = statement
+  }
+
+  let services
+  contract.services = []
+  if (contratElem['tns:ServicesSouscrits']) {
+    services = contratElem['tns:ServicesSouscrits'].map(serviceElem => {
+      return {
+        nom: getF(serviceElem, 'tns:NomService'),
+        activ: getF(serviceElem, 'tns:Etat')
+      }
+    })
+    contract.services = contract.services.concat(services)
+  }
+
+  if (accordObj['tns:ServicesSouscrits']) {
+    services = accordObj['tns:ServicesSouscrits'].map(serviceElem => {
+      return {
+        nom: getF(serviceElem, 'tns:nomService'),
+        // TODO : to UTC
+        start: getF(serviceElem, 'tns:dateSouscription'),
+        activ: getF(serviceElem, 'tns:statut')
+      }
+    })
+
+    contract.services = contract.services.concat(services)
+  }
+
+  return { contract, client }
+}
+
+function parseAddr(addrElem) {
+  // Put address in cozy-contact like format, two lines :
+  // First: Postbox, appartment and street adress on first
+  // Second: Locality, region, postcode, country
+  const getFAddr = getF.bind(null, addrElem)
+
+  if (addrElem) {
+    const numRue = getFAddr('tns:NumRue') || ''
+    const nomRue = getFAddr('tns:NomRue') || ''
+    const codePostal = getFAddr('tns:CodePostal') || ''
+    const ville = getFAddr('tns:Ville') || ''
+
+    return address = {
+      street: `${numRue} ${nomRue}`,
+      city: ville,
+      postcode: codePostal,
+      country: 'FRANCE',
+      formated: `${numRue} ${nomRue}\n${codePostal} ${ville}`
+    }
+  }
+}
+
+function parseClientName(identiteElem) {
+  // name in cozy-contact like format !
+  const getFIdentite = getF.bind(null, identiteElem)
+  const civilite = getFIdentite('tns:Civilite') || ''
+  const nom = getFIdentite('tns:Nom') || ''
+  const prenom = getFIdentite('tns:Prenom') || ''
+  return {
+    prefix: civilite,
+    family: nom,
+    given: prenom,
+    formated: `${prenom} ${nom}`
+  }
+
+}
+
 function parseClient(resBody) {
   const client = {
     vendor: 'EDF',
@@ -1635,37 +1618,8 @@ function parseClient(resBody) {
   // numeroAcc and numeroBD are mandatory.
   client.numeroAcc = getF(resBody, 'tns:Numero')
   client.clientId = getF(bpObject, 'tns:Numero')
-
-  // Put address in cozy-contact like format, two lines :
-  // First: Postbox, appartment and street adress on first
-  // Second: Locality, region, postcode, country
-  const addressObject = getF(resBody, 'tns:Adresse')
-  if (addressObject) {
-    const numRue = getF(addressObject, 'tns:NumRue') || ''
-    const nomRue = getF(addressObject, 'tns:NomRue') || ''
-    const codePostal = getF(addressObject, 'tns:CodePostal') || ''
-    const ville = getF(addressObject, 'tns:Ville') || ''
-
-    client.address = {
-      street: `${numRue} ${nomRue}`,
-      city: ville,
-      postcode: codePostal,
-      country: 'FRANCE',
-      formated: `${numRue} ${nomRue}\n${codePostal} ${ville}`
-    }
-  }
-
-  // name in cozy-contact like format !
-  const identiteObj = getF(bpObject, 'tns:Identite')
-  const civilite = getF(identiteObj, 'tns:Civilite') || ''
-  const nom = getF(identiteObj, 'tns:Nom') || ''
-  const prenom = getF(identiteObj, 'tns:Prenom') || ''
-  client.name = {
-    prefix: civilite,
-    family: nom,
-    given: prenom,
-    formated: `${prenom} ${nom}`
-  }
+  client.address = parseAddr(getF(resBody, 'tns:Adresse'))
+  client.name = parseClientName(getF(bpObject, 'tns:Identite'))
 
   const coTitulaireElem = getF(bpObject, 'tns:IdentitePart')
   if (coTitulaireElem) {
