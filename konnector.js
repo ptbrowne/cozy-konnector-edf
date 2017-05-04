@@ -2,6 +2,7 @@ const xml2js = require('xml2js')
 const request = require('request')
 const async = require('async')
 const moment = require('moment')
+const _ = require('lodash')
 
 const updateOrCreate = require('./lib/update_or_create')
 // TODO localization = require '../lib/localization_manager'
@@ -247,7 +248,7 @@ const fetchVisualiserPartenaire = function(
 
       client.commercialContact = contact
 
-      entries.clients[0] = _extend(entries.clients[0], client)
+      entries.clients[0] = _.extend(entries.clients[0], client)
 
       K.logger.info('Fetched visualiserPartenaire.')
       return callback()
@@ -1370,17 +1371,6 @@ var K = (module.exports = BaseKonnector.createNew({
 }))
 
 // Helpers
-
-var _extend = function(a, b) {
-  for (const k in b) {
-    const v = b[k]
-    if (v != null) {
-      a[k] = v
-    }
-  }
-  return a
-}
-
 var getF = function(node, ...fields) {
   try {
     for (const field of Array.from(fields)) {
