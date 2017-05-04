@@ -1509,13 +1509,14 @@ function parseAccord(accordObj) {
 
   const cadranElem = getFContrat('tns:ListeCadran')
   if (cadranElem) {
+    const getFCadran = getF.bind(null, cadranElem)
     contract.counter = {
-      comptage: getFContrat('tns:Type'),
-      nombreRoues: getFContrat('tns:NombreRoues'),
-      dernierIndex: getFContrat('tns:DernierIndex'),
+      comptage: getFCadran('tns:Type'),
+      nombreRoues: getFCadran('tns:NombreRoues'),
+      dernierIndex: getFCadran('tns:DernierIndex'),
       type: getFContrat('tns:DonneesTechniques', 'tns:TypeCompteur'),
-      annualConsumption: getF(cadranElem, 'tns:ConsommationAnnuelle'),
-      peakHours: getFContrat('tns:DonneesTechniques', 'tns:HorrairesHC')
+      annualConsumption: getFCadran('tns:ConsommationAnnuelle'),
+      peakHours: getFCadran('tns:DonneesTechniques', 'tns:HorrairesHC')
     }
   }
 
@@ -1581,7 +1582,7 @@ function parseAddr(addrElem) {
     const codePostal = getFAddr('tns:CodePostal') || ''
     const ville = getFAddr('tns:Ville') || ''
 
-    return address = {
+    return {
       street: `${numRue} ${nomRue}`,
       city: ville,
       postcode: codePostal,
@@ -1603,7 +1604,6 @@ function parseClientName(identiteElem) {
     given: prenom,
     formated: `${prenom} ${nom}`
   }
-
 }
 
 function parseClient(resBody) {
