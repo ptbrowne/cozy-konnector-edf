@@ -18,6 +18,7 @@ const Contract = require('./models/contract')
 const PaymentTerms = require('./models/payment_terms')
 const ConsumptionStatement = require('./models/consumption_statement')
 const Home = require('./models/home')
+const EnergyBreakdown = require('./models/EnergyBreakdown')
 
 const parser = new xml2js.Parser()
 const builder = new xml2js.Builder({ headless: true })
@@ -1228,10 +1229,59 @@ const fetchEdeliaGasIndexes = function(
   })
 }
 
-      } catch (e) {
-      }
+const makeEdeliaFetcher = function(name, options) {
+  const { parse, getPath, bail } = options
 
+  return function(requiredFields, entries, data, callback) {
+    if (bail && bail()) {
+      callback()
+    }
+    K.logger.info(`Fetching ${name}`)
+    getEdelia(data.edeliaToken, getPath(), function(err, response, objs) {
+      if (err) {
+        K.logger.error(`Error during ${name}`)
+        K.logger.error(err)
+        return callback(err)
+      }
+      try {
+        parse(entries, data, objs, response)
+        K.logger.info(`Fetched ${name}`)
+        callback()
+      } catch (e) {
+        K.logger.error(`Error during ${name}`)
+        callback(e)
+      }
+    })
+  }
 }
+
+const jsonlog = function(d) {
+  K.logger.info(JSON.stringify(d, null, 2))
+}
+
+const fetchEdeliaUsageBreakdowns = makeEdeliaFetcher(
+  'Edelia usage breakdowns',
+  {
+    getPath: path => {
+      const now = new Date()
+      return `sites/-/elec-usage-breakdowns?ts=${now.toISOString()}`
+    },
+    parse: (entries, data, energyBreakdown, response) => {
+      if (response.statusCode != 200) {
+        throw new Error('Status code != 200')
+      }
+      const breakdown = _.extend(
+        {
+          vendor: 'EDF',
+          clientId: data.contract.clientId,
+          contractNumber: data.contract.number
+        },
+        energyBreakdown
+      )
+      entries.energybreakdowns.push(breakdown)
+    }
+  }
+)
 
 const prepareEntries = function(requiredFields, entries, data, next) {
   entries.homes = []
@@ -1240,6 +1290,7 @@ const prepareEntries = function(requiredFields, entries, data, next) {
   entries.fetched = []
   entries.clients = []
   entries.paymenttermss = []
+  entries.energybreakdowns = []
   return next()
 }
 
@@ -1276,21 +1327,26 @@ const displayData = function(requiredFields, entries, data, next) {
   return next()
 }
 
-const fetchEdeliaData = (requiredFields, entries, data, next) =>
+const fetchEdeliaData = (requiredFields, entries, data, next) => {
+  K.logger.info(`Number of Edelia contracts ${entries.contracts.length}`)
   async.eachSeries(
     entries.contracts,
     function(contract, callback) {
       data.contract = contract
+      K.logger.info(
+        `Fetching Edelia data for contract ${JSON.stringify(contract, null, 2)}`
+      )
       const importer = fetcher.new()
       const operations = [
         fetchEdeliaToken,
-        fetchEdeliaProfile,
-        fetchEdeliaMonthlyElecConsumptions,
-        fetchEdeliaSimilarHomeYearlyElecComparisions,
-        fetchEdeliaElecIndexes,
-        fetchEdeliaMonthlyGasConsumptions,
-        fetchEdeliaSimilarHomeYearlyGasComparisions,
-        fetchEdeliaGasIndexes
+        // fetchEdeliaUsageBreakdowns
+        // fetchEdeliaProfile,
+        // fetchEdeliaMonthlyElecConsumptions,
+        // fetchEdeliaSimilarHomeYearlyElecComparisions,
+        // fetchEdeliaElecIndexes,
+        // fetchEdeliaMonthlyGasConsumptions,
+        // fetchEdeliaSimilarHomeYearlyGasComparisions,
+        // fetchEdeliaGasIndexes
       ]
       operations.forEach(operation => importer.use(operation))
       importer.args(requiredFields, entries, data)
@@ -1305,6 +1361,7 @@ const fetchEdeliaData = (requiredFields, entries, data, next) =>
     },
     next
   )
+}
 
 // Konnector
 var K = (module.exports = BaseKonnector.createNew({
@@ -1345,11 +1402,11 @@ var K = (module.exports = BaseKonnector.createNew({
 
     getEDFToken,
     fetchListerContratClientParticulier,
-    fetchVisualiserPartenaire,
-    fetchVisualiserAccordCommercial,
-    fetchVisualiserCalendrierPaiement,
-    fetchVisualiserFacture,
-    fetchVisualiserHistoConso,
+    // fetchVisualiserPartenaire,
+    // fetchVisualiserAccordCommercial,
+    // fetchVisualiserCalendrierPaiement,
+    // fetchVisualiserFacture,
+    // fetchVisualiserHistoConso,
 
     fetchEdeliaData,
 
@@ -1357,6 +1414,7 @@ var K = (module.exports = BaseKonnector.createNew({
     updateOrCreate(logger, Contract, ['number', 'vendor']),
     updateOrCreate(logger, PaymentTerms, ['vendor', 'clientId']),
     updateOrCreate(logger, Home, ['pdl']),
+    updateOrCreate(logger, EnergyBreakdown, ['contractId']),
     updateOrCreate(logger, ConsumptionStatement, [
       'contractNumber',
       'statementType',
