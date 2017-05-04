@@ -286,93 +286,73 @@ const fetchVisualiserAccordCommercial = function(
     if (err) {
       return callback(err)
     }
-    try {
-      const errorCode = getF(
-        result['tns:visualiserAccordCommercialResponse'],
-        'tns:responseWebService',
-        'tns:CodeEtatService'
-      )
-      if (errorCode && errorCode !== 'PSC0000') {
-        K.logger.error(
-          getF(
-            result['tns:visualiserAccordCommercialResponse'],
-            'tns:responseWebService',
-            'tns:LibelleEtatService'
-          )
-        )
 
+    const accordCommResp = result['tns:visualiserAccordCommercialResponse']
+    const webServiceResp = getF(accordCommResp, 'tns:responseWebService')
+    try {
+      const errorCode = getF(webServiceResp, 'tns:CodeEtatService')
+      if (errorCode && errorCode !== 'PSC0000') {
+        K.logger.error(getF(webServiceResp, 'tns:LibelleEtatService'))
         return callback() // Continue on error.
       }
 
-      const acoElem = getF(
-        result['tns:visualiserAccordCommercialResponse'],
-        'tns:responseWebService',
+      const acoElem = getF(webServiceResp
         'tns:listeAccordsCommerciaux',
         'tns:item'
       )
 
-      const paymentTerms = {
-        vendor: 'EDF',
-        clientId: entries.clients[0].clientId,
-        docTypeVersion: K.docTypeVersion
+      const getFAccordCom = getF.bind(null, acoElem)
+      const getFBanque = getFAccordCom.bind(null, 'tns:banque')
+      const getFDetail = getFAccordCom.bind(null, 'tns:detail')
+      const getFDernierReg = getFAccordCom.bind(null, 'tns:dernierReglement')
+
+      const bankAddress = {
+        street: getFBanque('tns:numNomRue'),
+        city: getFBanque('tns:codePostalVille'),
+        // postcode ?
+        country: getFBanque('tns:pays'),
+        formated: `${bankAddress.street}\n${bankAddress.city} ${bankAddress.country}`
       }
 
       const bankDetails = {
-        iban: getF(acoElem, 'tns:banque', 'tns:iban'),
+        iban: getFBanque('tns:iban'),
         holder: getF(acoElem, 'tns:compte', 'tns:titulaire'),
-        bank: getF(acoElem, 'tns:banque', 'tns:nom')
+        bank: getFBanque('tns:nom'),
+        bankAddress: bankAddress
       }
 
-      const bankAddress = {
-        street: getF(acoElem, 'tns:banque', 'tns:numNomRue'),
-        city: getF(acoElem, 'tns:banque', 'tns:codePostalVille'),
-        // postcode ?
-        country: getF(acoElem, 'tns:banque', 'tns:pays')
+      const paymentTerms = {
+        vendor: 'EDF',
+        clientId: entries.clients[0].clientId,
+        docTypeVersion: K.docTypeVersion,
+        encryptedBankDetails: JSON.stringify(bankDetails),
+        balance: getFDetail('tns:solde'),
+        paymentMeans: getFDetail('tns:modeEncaissement'),
+        modifBankDetailsAllowed: getFDetail('tns:modifIBANAutorisee'),
+        billFrequency: getFAccordCom('tns:facturation', 'tns:periodicite')
+        dernierReglement: {
+          date: getFDernierReg('tns:date'),
+          amount: getFDernierReg('tns:montant'),
+          type: getFDernierReg('tns:type')
+        },
+        idPayer: getFAccordCom('tns:numeroPayeur'),
+        payerDivergent: getFAccordCom('tns:payeurDivergent')
       }
 
-      bankAddress.formated =
-        `${bankAddress.street}` + `\n${bankAddress.city} ${bankAddress.country}`
-
-      bankDetails.bankAddress = bankAddress
-      paymentTerms.encryptedBankDetails = JSON.stringify(bankDetails)
-
-      paymentTerms.balance = getF(acoElem, 'tns:detail', 'tns:solde')
-      paymentTerms.paymentMeans = getF(
-        acoElem,
-        'tns:detail',
-        'tns:modeEncaissement'
-      )
-      paymentTerms.modifBankDetailsAllowed = getF(
-        acoElem,
-        'tns:detail',
-        'tns:modifIBANAutorisee'
-      )
       //accountNumber: getF acoElem, 'ns:detail', 'ns:numeroEtendu'
-      paymentTerms.dernierReglement = {
-        date: getF(acoElem, 'tns:dernierReglement', 'tns:date'),
-        amount: getF(acoElem, 'tns:dernierReglement', 'tns:montant'),
-        type: getF(acoElem, 'tns:dernierReglement', 'tns:type')
-      }
-      paymentTerms.billFrequency = getF(
-        acoElem,
-        'tns:facturation',
-        'tns:periodicite'
-      )
       paymentTerms.nextBillDate = getF(acoElem)
 
       paymentTerms.idPayer = getF(acoElem, 'tns:numeroPayeur')
-      paymentTerms.payerDivergent = getF(acoElem, 'tns:payeurDivergent')
       // paymentTerms.mensuSansSurprise = getF acoElem, 'tns:mensuSansSurprise'
 
-      const servicesElem = getF(acoElem, 'tns:services')['tns:item']
+      const servicesElem = getFAccordCom('tns:services')['tns:item']
       const services = servicesElem.map(function(serviceElem) {
-        const service = {}
-        service.name = getF(serviceElem, 'tns:nomService')
-        service.status = getF(serviceElem, 'tns:etat')
-        service.valueSubscribed = getF(serviceElem, 'tns:valeurSouscrite')
-        service.valuesAvailable = serviceElem['tns:valeursPossibles']
-
-        return service
+        return {
+          name: getF(serviceElem, 'tns:nomService')
+          status: getF(serviceElem, 'tns:etat')
+          valueSubscribed: getF(serviceElem, 'tns:valeurSouscrite')
+          valuesAvailable: serviceElem['tns:valeursPossibles']
+        }
       })
 
       entries.paymenttermss.push(paymentTerms)
