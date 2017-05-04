@@ -909,16 +909,19 @@ const saveBills = function(requiredFields, entries, data, callback) {
 
 const fetchEdeliaToken = function(requiredFields, entries, data, callback) {
   K.logger.info('fetchEdeliaToken')
+
+  const formData = {
+    client_id: 'sha1pae0Pahngee6uwiphooDie7thaiquahf2xohd6IeFeiphi9ziu0uw3am',
+    grant_type: 'edf_sso',
+    jeton_sso: data.edfToken,
+    bp: entries.clients[0].clientId,
+    pdl: data.contract.pdl
+  }
+
   return request.post(
     'https://api.edelia.fr/authorization-server/oauth/token',
     {
-      form: {
-        client_id: 'sha1pae0Pahngee6uwiphooDie7thaiquahf2xohd6IeFeiphi9ziu0uw3am',
-        grant_type: 'edf_sso',
-        jeton_sso: data.edfToken,
-        bp: entries.clients[0].clientId,
-        pdl: data.contract.pdl
-      },
+      form: formData,
       json: true
     },
     function(err, response, result) {
