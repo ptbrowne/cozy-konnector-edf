@@ -1194,42 +1194,43 @@ const fetchEdeliaGasIndexes = function(
 
   const end = moment().format('YYYY-MM-DD')
   const path = `/sites/-/gas-indexes?begin-date=2012-01-01&end-date=${end}&types=`
-  return getEdelia(
-    data.edeliaToken,
-    path,
-    function(err, response, objs) {
-      let error = null
-      try {
-        if (response.statusCode === 404) {
-          K.logger.warn('No EdeliaGasIndexes')
-          throw null
-        }
-
-        if (err) {
-          K.logger.error('Wihle fetchEdeliaGasIndexes')
-          K.logger.error(err)
-          throw err
-        }
-
-        objs.forEach(function(obj) {
-          const monthKey = obj.date.slice(0, 7)
-          const statement = data.consumptionStatementByMonth[monthKey]
-          if (!statement) {
-            K.logger.warn(`No monthly statement for ${monthKey}`)
-            return
-          }
-          statement.statements = statement.statements || []
-          return statement.statements.push(obj)
-        })
-
-        K.logger.info('Fetched fetchEdeliaGasIndexes')
-      } catch (e) {
-        error = e
+  return getEdelia(data.edeliaToken, path, function(err, response, objs) {
+    let error = null
+    try {
+      if (response.statusCode === 404) {
+        K.logger.warn('No EdeliaGasIndexes')
+        throw null
       }
 
-      return callback(error)
+      if (err) {
+        K.logger.error('Wihle fetchEdeliaGasIndexes')
+        K.logger.error(err)
+        throw err
+      }
+
+      objs.forEach(function(obj) {
+        const monthKey = obj.date.slice(0, 7)
+        const statement = data.consumptionStatementByMonth[monthKey]
+        if (!statement) {
+          K.logger.warn(`No monthly statement for ${monthKey}`)
+          return
+        }
+        statement.statements = statement.statements || []
+        return statement.statements.push(obj)
+      })
+
+      K.logger.info('Fetched fetchEdeliaGasIndexes')
+    } catch (e) {
+      error = e
     }
-  )
+
+    return callback(error)
+  })
+}
+
+      } catch (e) {
+      }
+
 }
 
 const prepareEntries = function(requiredFields, entries, data, next) {
