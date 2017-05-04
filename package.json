@@ -17,7 +17,7 @@
     "xml2js": "^0.4.17"
   },
   "scripts": {
-    "start": "node index.js",
+    "start": "node $NODE_OPTIONS index.js",
     "predev": "env-cmd ./data/env.js cozy-authenticate manifest.konnectors",
     "dev": "env-cmd ./data/env.js npm start",
     "standalone": "env-cmd ./data/env_standalone.js npm start"
