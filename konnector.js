@@ -1211,10 +1211,12 @@ const fetchEdeliaGasIndexes = function(
   }
 
   K.logger.info('fetchEdeliaGasIndexes')
+
+  const end = moment().format('YYYY-MM-DD')
+  const path = `/sites/-/gas-indexes?begin-date=2012-01-01&end-date=${end}&types=`
   return getEdelia(
     data.edeliaToken,
-    '/sites/-/gas-indexes?begin-date=2012-01-01&' +
-      `end-date=${moment().format('YYYY-MM-DD')}&types=`,
+    path,
     function(err, response, objs) {
       let error = null
       try {
@@ -1230,13 +1232,10 @@ const fetchEdeliaGasIndexes = function(
         }
 
         objs.forEach(function(obj) {
-          const statement =
-            data.consumptionStatementByMonth[obj.date.slice(0, 7)]
+          const monthKey = obj.date.slice(0, 7)
+          const statement = data.consumptionStatementByMonth[monthKey]
           if (!statement) {
-            K.logger.warn(
-              `No monthly statement for\
-${obj.date.slice(0, 7)}`
-            )
+            K.logger.warn(`No monthly statement for ${monthKey}`)
             return
           }
           statement.statements = statement.statements || []
