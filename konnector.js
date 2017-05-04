@@ -297,7 +297,7 @@ const fetchVisualiserAccordCommercial = function(
         return callback() // Continue on error.
       }
 
-      const acoElem = getF(webServiceResp
+      const acoElem = getF(webServiceResp,
         'tns:listeAccordsCommerciaux',
         'tns:item'
       )
