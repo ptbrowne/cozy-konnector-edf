@@ -330,7 +330,7 @@ const fetchVisualiserAccordCommercial = function(
         balance: getFDetail('tns:solde'),
         paymentMeans: getFDetail('tns:modeEncaissement'),
         modifBankDetailsAllowed: getFDetail('tns:modifIBANAutorisee'),
-        billFrequency: getFAccordCom('tns:facturation', 'tns:periodicite')
+        billFrequency: getFAccordCom('tns:facturation', 'tns:periodicite'),
         dernierReglement: {
           date: getFDernierReg('tns:date'),
           amount: getFDernierReg('tns:montant'),
@@ -348,9 +348,9 @@ const fetchVisualiserAccordCommercial = function(
       const servicesElem = getFAccordCom('tns:services')['tns:item']
       const services = servicesElem.map(function(serviceElem) {
         return {
-          name: getF(serviceElem, 'tns:nomService')
-          status: getF(serviceElem, 'tns:etat')
-          valueSubscribed: getF(serviceElem, 'tns:valeurSouscrite')
+          name: getF(serviceElem, 'tns:nomService'),
+          status: getF(serviceElem, 'tns:etat'),
+          valueSubscribed: getF(serviceElem, 'tns:valeurSouscrite'),
           valuesAvailable: serviceElem['tns:valeursPossibles']
         }
       })
