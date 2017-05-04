@@ -1518,20 +1518,20 @@ function parseAccord(accordObj) {
       peakHours: getFContrat('tns:DonneesTechniques', 'tns:HorrairesHC')
     }
   }
-  const releveElem = getFContrat('tns:Releve')
 
+  const releveElem = getFContrat('tns:Releve')
   if (releveElem) {
     const statement = {}
 
     const releveMapping = {
       prochaineReleve: 'tns:ProchaineDateReleveReelle',
-      saisieReleveConfiance:'tns:SaisieRC',
-      dateFermetureReleveConfiance:'tns:DateFermetureRC',
-      prochaineDateOuvertureReleveConfiance:'tns:ProchaineDateOuvertureRC',
-      prochaineDateFermetureReleveConfiance:'tns:ProchaineDateFermetureRC',
-      prochaineDateFermetureReelle:'tns:ProchaineDateFermetureReelle',
-      saisieSuiviConso:'tns:SaisieSC',
-      prochaineDateOuvertureSaisieConso:'tns:ProchaineDateOuvertureSC',
+      saisieReleveConfiance: 'tns:SaisieRC',
+      dateFermetureReleveConfiance: 'tns:DateFermetureRC',
+      prochaineDateOuvertureReleveConfiance: 'tns:ProchaineDateOuvertureRC',
+      prochaineDateFermetureReleveConfiance: 'tns:ProchaineDateFermetureRC',
+      prochaineDateFermetureReelle: 'tns:ProchaineDateFermetureReelle',
+      saisieSuiviConso: 'tns:SaisieSC',
+      prochaineDateOuvertureSaisieConso: 'tns:ProchaineDateOuvertureSC'
     }
 
     for (const key of Object.keys(releveMapping)) {
