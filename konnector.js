@@ -154,7 +154,7 @@ const fetchListerContratClientParticulier = function(
         return callback('request error')
       }
 
-      const accords = getF(response, 'tns:CorpsSortie')['tns:AccordCo']
+      const accords = getF(response, 'tns:CorpsSortie')['tns:AccordCo'].slice(0, 1)
 
       K.logger.info(`Number EDF contracts ${accords.length}`)
 
@@ -298,7 +298,8 @@ const fetchVisualiserAccordCommercial = function(
         return callback() // Continue on error.
       }
 
-      const acoElem = getF(webServiceResp,
+      const acoElem = getF(
+        webServiceResp,
         'tns:listeAccordsCommerciaux',
         'tns:item'
       )
@@ -312,9 +313,9 @@ const fetchVisualiserAccordCommercial = function(
         street: getFBanque('tns:numNomRue'),
         city: getFBanque('tns:codePostalVille'),
         // postcode ?
-        country: getFBanque('tns:pays'),
-        formated: `${bankAddress.street}\n${bankAddress.city} ${bankAddress.country}`
+        country: getFBanque('tns:pays')
       }
+      bankAddress.formated = `${bankAddress.street}\n${bankAddress.city} ${bankAddress.country}`
 
       const bankDetails = {
         iban: getFBanque('tns:iban'),
@@ -581,18 +582,14 @@ const fetchVisualiserHistoConso = function(
     entries.contracts,
     function(contract, cb) {
       const path = '/ws/visualiserHistoConso_rest_V3-0/invoke'
+      const basePasserelle = 'http://www.edf.fr/commerce/passerelle'
+      const baseVisualiserHistoConso = `${basePasserelle}/css/visualiserHistoConso`
       const body = {
         'message:msgRequete': {
           $: {
-            'xsi:schemaLocation': 'http://www.edf.fr/commerce/' +
-              'passerelle/css/visualiserHistoConso/service/v2 C:\\HMN' +
-              '\\EDFMoiV2\\WSDL\\passerelle\\passerelle\\css' +
-              '\\visualiserHistoConso\\service\\v2\\' +
-              'visualiserHistoConso.xsd',
-            'xmlns:message': 'http://www.edf.fr/commerce/passerelle/' +
-              'css/visualiserHistoConso/service/v2',
-            'xmlns:ent': 'http://www.edf.fr/commerce/passerelle/' +
-              'commun/v2/entete',
+            'xsi:schemaLocation': `${baseVisualiserHistoConso}/service/v2 C:\\HMN\\EDFMoiV2\\WSDL\\passerelle\\passerelle\\css\\visualiserHistoConso\\service\\v2\\visualiserHistoConso.xsd`,
+            'xmlns:message': `${basePasserelle}/css/visualiserHistoConso/service/v2`,
+            'xmlns:ent': `${basePasserelle}/commun/v2/entete`,
             'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance'
           },
 
@@ -612,11 +609,10 @@ const fetchVisualiserHistoConso = function(
           return callback(err)
         }
         try {
-          const errorCode = getF(result, 'ns:enteteSortie', 'ent:codeRetour')
+          const getFSortie = getF.bind(null, result, 'ns:enteteSortie')
+          const errorCode = getFSortie('ent:codeRetour')
           if (errorCode && errorCode !== '0') {
-            K.logger.error(
-              getF(result, 'tns:enteteSortie', 'tns:libelleRetour')
-            )
+            K.logger.error(getFSortie('tns:libelleRetour'))
             // Continue on error.
             return callback()
           }
@@ -1339,14 +1335,14 @@ const fetchEdeliaData = (requiredFields, entries, data, next) => {
       const importer = fetcher.new()
       const operations = [
         fetchEdeliaToken,
-        // fetchEdeliaUsageBreakdowns
-        // fetchEdeliaProfile,
-        // fetchEdeliaMonthlyElecConsumptions,
-        // fetchEdeliaSimilarHomeYearlyElecComparisions,
-        // fetchEdeliaElecIndexes,
-        // fetchEdeliaMonthlyGasConsumptions,
-        // fetchEdeliaSimilarHomeYearlyGasComparisions,
-        // fetchEdeliaGasIndexes
+        fetchEdeliaUsageBreakdowns,
+        fetchEdeliaProfile,
+        fetchEdeliaMonthlyElecConsumptions,
+        fetchEdeliaSimilarHomeYearlyElecComparisions,
+        fetchEdeliaElecIndexes,
+        fetchEdeliaMonthlyGasConsumptions,
+        fetchEdeliaSimilarHomeYearlyGasComparisions,
+        fetchEdeliaGasIndexes
       ]
       operations.forEach(operation => importer.use(operation))
       importer.args(requiredFields, entries, data)
@@ -1402,11 +1398,11 @@ var K = (module.exports = BaseKonnector.createNew({
 
     getEDFToken,
     fetchListerContratClientParticulier,
-    // fetchVisualiserPartenaire,
-    // fetchVisualiserAccordCommercial,
-    // fetchVisualiserCalendrierPaiement,
-    // fetchVisualiserFacture,
-    // fetchVisualiserHistoConso,
+    fetchVisualiserPartenaire,
+    fetchVisualiserAccordCommercial,
+    fetchVisualiserCalendrierPaiement,
+    fetchVisualiserFacture,
+    fetchVisualiserHistoConso,
 
     fetchEdeliaData,
 
@@ -1414,7 +1410,7 @@ var K = (module.exports = BaseKonnector.createNew({
     updateOrCreate(logger, Contract, ['number', 'vendor']),
     updateOrCreate(logger, PaymentTerms, ['vendor', 'clientId']),
     updateOrCreate(logger, Home, ['pdl']),
-    updateOrCreate(logger, EnergyBreakdown, ['contractId']),
+    updateOrCreate(logger, EnergyBreakdown, ['contractId', 'vendor']),
     updateOrCreate(logger, ConsumptionStatement, [
       'contractNumber',
       'statementType',

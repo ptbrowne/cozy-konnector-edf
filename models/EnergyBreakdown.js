@@ -8,7 +8,7 @@ module.exports = baseModel.createNew({
       Fields :
         vendor: String # EDF
         clientId: String # Client id from EDF,
-        contractId: String # ContractId from EDF
+        contractNumber: String # ContractId from EDF
         beginMonth: String[YYYY-MM]
         endMonth:String[YYYY-MM]
         totalCost: Number
