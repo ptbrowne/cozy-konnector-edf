@@ -9,6 +9,7 @@
     "async": "^2.3.0",
     "cozy-konnector-libs": "^1.0.11",
     "debug": "^2.6.3",
+    "lodash": "^4.17.4",
     "moment": "^2.18.1",
     "node-polyglot": "^2.2.2",
     "printit": "^0.1.20",
@@ -17,12 +18,10 @@
     "xml2js": "^0.4.17"
   },
   "scripts": {
-    "start": "node index.js",
+    "start": "node $NODE_OPTIONS index.js",
     "predev": "env-cmd ./data/env.js cozy-authenticate manifest.konnectors",
     "dev": "env-cmd ./data/env.js npm start",
-    "standalone": "env-cmd ./data/env_standalone.js npm start",
-    "build": "coffee -c konnector.coffee",
-    "watch": "coffee -c -w konnector.coffee"
+    "standalone": "env-cmd ./data/env_standalone.js npm start"
   },
   "devDependencies": {
     "coffee-script": "^1.12.5",

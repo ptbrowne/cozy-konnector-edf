@@ -46,6 +46,10 @@
     "ConsumptionStatement": {
       "description": "Import energy consumption data from EDF in your Cozy.",
       "type": "org.fing.mesinfos.consumptionstatement"
+    },
+    "EnergyBreadkwon": {
+      "description": "Import energy breakdown data from EDF in your Cozy",
+      "type": "org.fing.mesinfos.energybreakdown"
     }
   },
   "developer": {
