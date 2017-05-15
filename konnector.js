@@ -73,7 +73,7 @@ const ENERGY_CODES = {
 const DOMAIN = 'https://ws-mobile-particuliers.edf.com'
 // Requests
 
-const getEDFToken = function(requiredFields, entries, data, callback) {
+const getEDFToken = function (requiredFields, entries, data, callback) {
   K.logger.info('getEDFToken')
   const path = '/ws/authentifierUnClientParticulier_rest_V3-0/invoke'
   const body = {
@@ -93,7 +93,7 @@ const getEDFToken = function(requiredFields, entries, data, callback) {
     }
   }
 
-  return edfRequestPost(path, body, function(err, result) {
+  return edfRequestPost(path, body, function (err, result) {
     if (err) {
       return callback(err)
     }
@@ -120,7 +120,7 @@ const getEDFToken = function(requiredFields, entries, data, callback) {
   })
 }
 
-const fetchListerContratClientParticulier = function(
+const fetchListerContratClientParticulier = function (
   reqFields,
   entries,
   data,
@@ -141,7 +141,7 @@ const fetchListerContratClientParticulier = function(
     }
   }
 
-  return edfRequestPost(path, body, function(err, result) {
+  return edfRequestPost(path, body, function (err, result) {
     if (err) {
       return callback(err)
     }
@@ -174,7 +174,7 @@ const fetchListerContratClientParticulier = function(
   })
 }
 
-const fetchVisualiserPartenaire = function(
+const fetchVisualiserPartenaire = function (
   requiredFields,
   entries,
   data,
@@ -186,14 +186,9 @@ const fetchVisualiserPartenaire = function(
   const body = {
     msgRequete: {
       $: {
-        'xsi:schemaLocation': 'http://www.edf.fr/commerce/passerelle/' +
-          'css/visualiserPartenaire/service/v2 C:\\HMN\\EDFMoiV2\\WSDL' +
-          '\\passerelle\\passerelle\\css\\visualiserPartenaire\\service' +
-          '\\v2\\visualiserPartenaire.xsd',
-        xmlns: 'http://www.edf.fr/commerce/passerelle/css/' +
-          'visualiserPartenaire/service/v2',
-        'xmlns:ent': 'http://www.edf.fr/commerce/passerelle/commun/' +
-          'v2/entete',
+        'xsi:schemaLocation': 'http://www.edf.fr/commerce/passerelle/css/visualiserPartenaire/service/v2 C:\\HMN\\EDFMoiV2\\WSDL\\passerelle\\passerelle\\css\\visualiserPartenaire\\service\\v2\\visualiserPartenaire.xsd',
+        'xmlns': 'http://www.edf.fr/commerce/passerelle/css/visualiserPartenaire/service/v2',
+        'xmlns:ent': 'http://www.edf.fr/commerce/passerelle/commun/v2/entete',
         'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance'
       },
 
@@ -207,9 +202,12 @@ const fetchVisualiserPartenaire = function(
     }
   }
 
-  return edfRequestPost(path, body, function(err, result) {
+  return edfRequestPost(path, body, function (err, result) {
     if (err) {
       return callback(err)
+    }
+    if (!result) {
+      return callback()
     }
     try {
       const errorCode = getF(result, 'ns:enteteSortie', 'ent:codeRetour')
@@ -261,7 +259,7 @@ const fetchVisualiserPartenaire = function(
   })
 }
 
-const fetchVisualiserAccordCommercial = function(
+const fetchVisualiserAccordCommercial = function (
   requiredFields,
   entries,
   data,
@@ -284,7 +282,7 @@ const fetchVisualiserAccordCommercial = function(
     }
   }
 
-  return edfRequestPost(path, body, function(err, result) {
+  return edfRequestPost(path, body, function (err, result) {
     if (err) {
       return callback(err)
     }
@@ -342,13 +340,13 @@ const fetchVisualiserAccordCommercial = function(
         payerDivergent: getFAccordCom('tns:payeurDivergent')
       }
 
-      //accountNumber: getF acoElem, 'ns:detail', 'ns:numeroEtendu'
+      // accountNumber: getF acoElem, 'ns:detail', 'ns:numeroEtendu'
       paymentTerms.nextBillDate = getF(acoElem)
 
       // paymentTerms.mensuSansSurprise = getF acoElem, 'tns:mensuSansSurprise'
 
       const servicesElem = getFAccordCom('tns:services')['tns:item']
-      const services = servicesElem.map(function(serviceElem) {
+      const services = servicesElem.map(function (serviceElem) {
         return {
           name: getF(serviceElem, 'tns:nomService'),
           status: getF(serviceElem, 'tns:etat'),
@@ -372,7 +370,7 @@ const fetchVisualiserAccordCommercial = function(
   })
 }
 
-const fetchVisualiserCalendrierPaiement = function(
+const fetchVisualiserCalendrierPaiement = function (
   requiredFields,
   entries,
   data,
@@ -383,15 +381,9 @@ const fetchVisualiserCalendrierPaiement = function(
   const body = {
     'message:msgRequete': {
       $: {
-        'xsi:schemaLocation': 'http://www.edf.fr/commerce/passerelle/' +
-          'css/visualiserCalendrierPaiement/service/v2 C:\\HMN\\' +
-          'EDFMoiV2\\WSDL\\passerelle\\passerelle\\css\\' +
-          'visualiserCalendrierPaiement\\service\\v2\\' +
-          'visualiserCalendrierPaiement.xsd',
-        'xmlns:message': 'http://www.edf.fr/commerce/passerelle/css/' +
-          'visualiserCalendrierPaiement/service/v2',
-        'xmlns:ent': 'http://www.edf.fr/commerce/passerelle/commun/' +
-          'v2/entete',
+        'xsi:schemaLocation': 'http://www.edf.fr/commerce/passerelle/css/visualiserCalendrierPaiement/service/v2 C:\\HMN\\EDFMoiV2\\WSDL\\passerelle\\passerelle\\css\\visualiserCalendrierPaiement\\service\\v2\\visualiserCalendrierPaiement.xsd',
+        'xmlns:message': 'http://www.edf.fr/commerce/passerelle/css/visualiserCalendrierPaiement/service/v2',
+        'xmlns:ent': 'http://www.edf.fr/commerce/passerelle/commun/v2/entete',
         'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance'
       },
 
@@ -406,9 +398,12 @@ const fetchVisualiserCalendrierPaiement = function(
     }
   }
 
-  return edfRequestPost(path, body, function(err, result) {
+  return edfRequestPost(path, body, function (err, result) {
     if (err) {
       return callback(err)
+    }
+    if (!result) {
+      return
     }
     try {
       // Does API send an error ?
@@ -443,7 +438,7 @@ const fetchVisualiserCalendrierPaiement = function(
       listeEcheances = listeEcheances['ns:listeEcheances']
 
       // TODO : if no gaz and elec !?
-      const paymentSchedules = listeEcheances.map(function(echeance) {
+      const paymentSchedules = listeEcheances.map(function (echeance) {
         let amountGaz = parseFloat(getF(echeance, 'ns:montantGaz'))
         let amountElec = parseFloat(getF(echeance, 'ns:montantElec'))
 
@@ -488,7 +483,7 @@ const fetchVisualiserCalendrierPaiement = function(
   })
 }
 
-const fetchVisualiserFacture = function(reqFields, entries, data, callback) {
+const fetchVisualiserFacture = function (reqFields, entries, data, callback) {
   K.logger.info('fetchVisualiserFacture')
   const path = '/ws/visualiserFacture_rest_V3-0/invoke'
   const body = {
@@ -505,7 +500,7 @@ const fetchVisualiserFacture = function(reqFields, entries, data, callback) {
     }
   }
 
-  return edfRequestPost(path, body, function(err, result) {
+  return edfRequestPost(path, body, function (err, result) {
     if (err) {
       return callback(err)
     }
@@ -537,7 +532,7 @@ const fetchVisualiserFacture = function(reqFields, entries, data, callback) {
         'listeFactures'
       )['item']
 
-      bills = documents.map(function(elem) {
+      bills = documents.map(function (elem) {
         const details = getF(elem, 'resume')
         const bill = {
           vendor: 'EDF',
@@ -571,7 +566,7 @@ const fetchVisualiserFacture = function(reqFields, entries, data, callback) {
   })
 }
 
-const fetchVisualiserHistoConso = function(
+const fetchVisualiserHistoConso = function (
   requiredFields,
   entries,
   data,
@@ -580,7 +575,7 @@ const fetchVisualiserHistoConso = function(
   K.logger.info('fetchVisualiserHistoConso')
   return async.mapSeries(
     entries.contracts,
-    function(contract, cb) {
+    function (contract, cb) {
       const path = '/ws/visualiserHistoConso_rest_V3-0/invoke'
       const basePasserelle = 'http://www.edf.fr/commerce/passerelle'
       const baseVisualiserHistoConso = `${basePasserelle}/css/visualiserHistoConso`
@@ -604,7 +599,7 @@ const fetchVisualiserHistoConso = function(
         }
       }
 
-      return edfRequestPost(path, body, function(err, result) {
+      return edfRequestPost(path, body, function (err, result) {
         if (err) {
           return callback(err)
         }
@@ -625,7 +620,7 @@ const fetchVisualiserHistoConso = function(
           const consoElems =
             result['ns:msgReponse']['ns:corpsSortie'][0]['ns:listeHistoDeConso']
 
-          const res = consoElems.map(function(consoElem) {
+          const res = consoElems.map(function (consoElem) {
             const doc = {
               contractNumber: contract.number,
               billNumber: getF(consoElem, 'ns:numeroFacture'),
@@ -650,7 +645,7 @@ const fetchVisualiserHistoConso = function(
         }
       })
     },
-    function(err, results) {
+    function (err, results) {
       if (err) {
         return callback(err)
       }
@@ -669,11 +664,11 @@ const fetchVisualiserHistoConso = function(
   )
 }
 
-const saveBills = function(requiredFields, entries, data, callback) {
+const saveBills = function (requiredFields, entries, data, callback) {
   const options = {}
   options.vendor = 'edf'
 
-  options.requestoptions = function(bill) {
+  options.requestoptions = function (bill) {
     const path = '/ws/recupererDocumentContractuelGet_rest_V1-0/invoke'
     const body = {
       'dico:getRequest': {
@@ -699,8 +694,8 @@ const saveBills = function(requiredFields, entries, data, callback) {
   }
 
   options.parseoptions = data =>
-    new Promise(function(resolve, reject) {
-      return parser.parseString(data, function(err, result) {
+    new Promise(function (resolve, reject) {
+      return parser.parseString(data, function (err, result) {
         if (err) {
           return reject('request error')
         }
@@ -724,11 +719,11 @@ const saveBills = function(requiredFields, entries, data, callback) {
   )
 }
 
-//#
+// #
 // Edelia
-//#
+// #
 
-const fetchEdeliaToken = function(requiredFields, entries, data, callback) {
+const fetchEdeliaToken = function (requiredFields, entries, data, callback) {
   K.logger.info('fetchEdeliaToken')
 
   const formData = {
@@ -745,7 +740,7 @@ const fetchEdeliaToken = function(requiredFields, entries, data, callback) {
       form: formData,
       json: true
     },
-    function(err, response, result) {
+    function (err, response, result) {
       if (err) {
         K.logger.error('While fetching edelia token.')
         K.logger.error(err)
@@ -759,12 +754,12 @@ const fetchEdeliaToken = function(requiredFields, entries, data, callback) {
   )
 }
 
-const fetchEdeliaProfile = function(requiredFields, entries, data, callback) {
+const fetchEdeliaProfile = function (requiredFields, entries, data, callback) {
   K.logger.info('fetchEdeliaProfile')
   return getEdelia(
     data.edeliaToken,
     '/sites/-/profiles/simple?ts=' + new Date().toISOString(),
-    function(err, response, obj) {
+    function (err, response, obj) {
       let error = null
       try {
         if (!err && !obj) {
@@ -810,11 +805,11 @@ const fetchEdeliaProfile = function(requiredFields, entries, data, callback) {
   )
 }
 
-//#
+// #
 // Edelia electricite
-//#
+// #
 
-const fetchEdeliaMonthlyElecConsumptions = function(
+const fetchEdeliaMonthlyElecConsumptions = function (
   requiredFields,
   entries,
   data,
@@ -830,7 +825,7 @@ const fetchEdeliaMonthlyElecConsumptions = function(
     '/sites/-/monthly-elec-consumptions?' +
       'begin-month=2012-01&' +
       `end-month=${moment().add(1, 'month').format('YYYY-MM')}&ended=false`,
-    function(err, response, obj) {
+    function (err, response, obj) {
       let error = null
       try {
         if (response.statusCode === 404 || response.statusCode === 500) {
@@ -850,7 +845,7 @@ const fetchEdeliaMonthlyElecConsumptions = function(
         data.consumptionStatementByMonth = {}
 
         statements = statements.concat(
-          obj.monthlyElecEnergies.map(function(mee) {
+          obj.monthlyElecEnergies.map(function (mee) {
             const doc = {
               docTypeVersion: K.docTypeVersion,
               contractNumber: data.contract.number,
@@ -877,7 +872,7 @@ const fetchEdeliaMonthlyElecConsumptions = function(
         data.consumptionStatementByYear = {}
 
         statements = statements.concat(
-          obj.yearlyElecEnergies.map(function(yee) {
+          obj.yearlyElecEnergies.map(function (yee) {
             const doc = {
               docTypeVersion: K.docTypeVersion,
               contractNumber: data.contract.number,
@@ -917,7 +912,7 @@ const fetchEdeliaMonthlyElecConsumptions = function(
   )
 }
 
-const fetchEdeliaSimilarHomeYearlyElecComparisions = function(
+const fetchEdeliaSimilarHomeYearlyElecComparisions = function (
   requiredFields,
   entries,
   data,
@@ -931,7 +926,7 @@ const fetchEdeliaSimilarHomeYearlyElecComparisions = function(
   return getEdelia(
     data.edeliaToken,
     '/sites/-/similar-home-yearly-elec-comparisons?begin-year=2012',
-    function(err, response, objs) {
+    function (err, response, objs) {
       let error = null
       try {
         if (response.statusCode === 404 || response.statusCode === 500) {
@@ -945,7 +940,7 @@ const fetchEdeliaSimilarHomeYearlyElecComparisions = function(
           throw err
         }
 
-        objs.forEach(function(obj) {
+        objs.forEach(function (obj) {
           const statement = data.consumptionStatementByYear[obj.year]
           if (!statement) {
             K.logger.warn(`No yearly statement for ${obj.date.year}`)
@@ -969,7 +964,7 @@ const fetchEdeliaSimilarHomeYearlyElecComparisions = function(
   )
 }
 
-const fetchEdeliaElecIndexes = function(
+const fetchEdeliaElecIndexes = function (
   requiredFields,
   entries,
   data,
@@ -983,7 +978,7 @@ const fetchEdeliaElecIndexes = function(
     data.edeliaToken,
     '/sites/-/elec-indexes?begin-date=2012-01-01&' +
       `end-date=${moment().format('YYYY-MM-DD')}&types=`,
-    function(err, response, objs) {
+    function (err, response, objs) {
       let error = null
       try {
         if (response.statusCode === 404) {
@@ -997,7 +992,7 @@ const fetchEdeliaElecIndexes = function(
           throw err
         }
 
-        objs.forEach(function(obj) {
+        objs.forEach(function (obj) {
           const statement =
             data.consumptionStatementByMonth[obj.date.slice(0, 7)]
           if (!statement) {
@@ -1020,11 +1015,11 @@ const fetchEdeliaElecIndexes = function(
   )
 }
 
-//#
+// #
 // Edelia Gas
-//#
+// #
 
-const fetchEdeliaMonthlyGasConsumptions = function(
+const fetchEdeliaMonthlyGasConsumptions = function (
   requiredFields,
   entries,
   data,
@@ -1038,7 +1033,7 @@ const fetchEdeliaMonthlyGasConsumptions = function(
     data.edeliaToken,
     '/sites/-/monthly-gas-consumptions?begin-month=2012-01&' +
       `end-month=${moment().add(1, 'month').format('YYYY-MM')}&ended=false`,
-    function(err, response, obj) {
+    function (err, response, obj) {
       let error = null
       try {
         if (response.statusCode === 404) {
@@ -1058,34 +1053,34 @@ const fetchEdeliaMonthlyGasConsumptions = function(
         data.consumptionStatementByMonth = {}
 
         statements = obj.monthlyGasEnergies != null
-          ? obj.monthlyGasEnergies.map(function(mee) {
-              const doc = {
-                docTypeVersion: K.docTypeVersion,
-                contractNumber: data.contract.number,
-                start: mee.beginDay,
-                end: mee.endDay,
-                value: mee.consumption.energy,
-                statementType: 'estime',
-                statementCategory: 'edelia',
-                statementReason: 'EdeliaMonthlyGasConsumption',
-                period: mee.month,
-                cost: mee.totalCost,
-                costsByCategory: {
-                  consumption: mee.consumption.cost,
-                  standing: mee.standingCharge
-                }
+          ? obj.monthlyGasEnergies.map(function (mee) {
+            const doc = {
+              docTypeVersion: K.docTypeVersion,
+              contractNumber: data.contract.number,
+              start: mee.beginDay,
+              end: mee.endDay,
+              value: mee.consumption.energy,
+              statementType: 'estime',
+              statementCategory: 'edelia',
+              statementReason: 'EdeliaMonthlyGasConsumption',
+              period: mee.month,
+              cost: mee.totalCost,
+              costsByCategory: {
+                consumption: mee.consumption.cost,
+                standing: mee.standingCharge
               }
+            }
 
-              data.consumptionStatementByMonth[mee.month] = mee
-              return doc
-            })
+            data.consumptionStatementByMonth[mee.month] = mee
+            return doc
+          })
           : undefined
 
         // Convenient structure to enhance data later.
         data.consumptionStatementByYear = {}
 
         statements = statements.concat(
-          obj.yearlyGasEnergies.map(function(yee) {
+          obj.yearlyGasEnergies.map(function (yee) {
             const doc = {
               docTypeVersion: K.docTypeVersion,
               contractNumber: data.contract.number,
@@ -1125,7 +1120,7 @@ const fetchEdeliaMonthlyGasConsumptions = function(
   )
 }
 
-const fetchEdeliaSimilarHomeYearlyGasComparisions = function(
+const fetchEdeliaSimilarHomeYearlyGasComparisions = function (
   requiredFields,
   entries,
   data,
@@ -1139,7 +1134,7 @@ const fetchEdeliaSimilarHomeYearlyGasComparisions = function(
   return getEdelia(
     data.edeliaToken,
     '/sites/-/similar-home-yearly-gas-comparisons?begin-year=2012',
-    function(err, response, objs) {
+    function (err, response, objs) {
       let error = null
       try {
         if (response.statusCode === 404 || response.statusCode === 500) {
@@ -1153,7 +1148,7 @@ const fetchEdeliaSimilarHomeYearlyGasComparisions = function(
           throw err
         }
 
-        objs.forEach(function(obj) {
+        objs.forEach(function (obj) {
           const statement = data.consumptionStatementByYear[obj.year]
           if (!statement) {
             K.logger.warn(`No yearly statement for ${obj.date.year}`)
@@ -1177,7 +1172,7 @@ const fetchEdeliaSimilarHomeYearlyGasComparisions = function(
   )
 }
 
-const fetchEdeliaGasIndexes = function(
+const fetchEdeliaGasIndexes = function (
   requiredFields,
   entries,
   data,
@@ -1191,7 +1186,7 @@ const fetchEdeliaGasIndexes = function(
 
   const end = moment().format('YYYY-MM-DD')
   const path = `/sites/-/gas-indexes?begin-date=2012-01-01&end-date=${end}&types=`
-  return getEdelia(data.edeliaToken, path, function(err, response, objs) {
+  return getEdelia(data.edeliaToken, path, function (err, response, objs) {
     let error = null
     try {
       if (response.statusCode === 404) {
@@ -1205,7 +1200,7 @@ const fetchEdeliaGasIndexes = function(
         throw err
       }
 
-      objs.forEach(function(obj) {
+      objs.forEach(function (obj) {
         const monthKey = obj.date.slice(0, 7)
         const statement = data.consumptionStatementByMonth[monthKey]
         if (!statement) {
@@ -1225,15 +1220,15 @@ const fetchEdeliaGasIndexes = function(
   })
 }
 
-const makeEdeliaFetcher = function(name, options) {
+const makeEdeliaFetcher = function (name, options) {
   const { parse, getPath, bail } = options
 
-  return function(requiredFields, entries, data, callback) {
+  return function (requiredFields, entries, data, callback) {
     if (bail && bail()) {
       callback()
     }
     K.logger.info(`Fetching ${name}`)
-    getEdelia(data.edeliaToken, getPath(), function(err, response, objs) {
+    getEdelia(data.edeliaToken, getPath(), function (err, response, objs) {
       if (err) {
         K.logger.error(`Error during ${name}`)
         K.logger.error(err)
@@ -1251,11 +1246,11 @@ const makeEdeliaFetcher = function(name, options) {
   }
 }
 
-const jsonlog = function(d) {
+const jsonlog = function (d) {
   K.logger.info(JSON.stringify(d, null, 2))
 }
 
-const fetchEdeliaUsageBreakdowns = makeEdeliaFetcher(
+const fetchEdeliaElectricityUsageBreakdowns = makeEdeliaFetcher(
   'Edelia usage breakdowns',
   {
     getPath: path => {
@@ -1270,7 +1265,8 @@ const fetchEdeliaUsageBreakdowns = makeEdeliaFetcher(
         {
           vendor: 'EDF',
           clientId: data.contract.clientId,
-          contractNumber: data.contract.number
+          contractNumber: data.contract.number,
+          energyType: 'electricity'
         },
         energyBreakdown
       )
@@ -1279,7 +1275,33 @@ const fetchEdeliaUsageBreakdowns = makeEdeliaFetcher(
   }
 )
 
-const prepareEntries = function(requiredFields, entries, data, next) {
+const fetchEdeliaGasUsageBreakdowns = makeEdeliaFetcher(
+  'Edelia usage breakdowns',
+  {
+    getPath: path => {
+      const now = new Date()
+      return `sites/-/gas-usage-breakdowns?ts=${now.toISOString()}`
+    },
+    parse: (entries, data, energyBreakdown, response) => {
+      if (response.statusCode != 200) {
+        throw new Error('Status code != 200')
+      }
+      const breakdown = _.extend(
+        {
+          vendor: 'EDF',
+          clientId: data.contract.clientId,
+          contractNumber: data.contract.number,
+          energyType: 'gas'
+        },
+        energyBreakdown
+      )
+      entries.energybreakdowns.push(breakdown)
+    }
+  }
+)
+
+
+const prepareEntries = function (requiredFields, entries, data, next) {
   entries.homes = []
   entries.consumptionstatements = []
   entries.contracts = []
@@ -1290,7 +1312,7 @@ const prepareEntries = function(requiredFields, entries, data, next) {
   return next()
 }
 
-const buildNotifContent = function(requiredFields, entries, data, next) {
+const buildNotifContent = function (requiredFields, entries, data, next) {
   // data.updated: we don't speak about update, beacause we don't now if the
   // update actually changes the data or not.
 
@@ -1315,7 +1337,7 @@ const buildNotifContent = function(requiredFields, entries, data, next) {
   return next()
 }
 
-const displayData = function(requiredFields, entries, data, next) {
+const displayData = function (requiredFields, entries, data, next) {
   K.logger.info('display data')
   K.logger.info(JSON.stringify(entries, null, 2))
   K.logger.info(JSON.stringify(data, null, 2))
@@ -1327,15 +1349,13 @@ const fetchEdeliaData = (requiredFields, entries, data, next) => {
   K.logger.info(`Number of Edelia contracts ${entries.contracts.length}`)
   async.eachSeries(
     entries.contracts,
-    function(contract, callback) {
+    function (contract, callback) {
       data.contract = contract
-      K.logger.info(
-        `Fetching Edelia data for contract ${JSON.stringify(contract, null, 2)}`
-      )
       const importer = fetcher.new()
       const operations = [
         fetchEdeliaToken,
-        fetchEdeliaUsageBreakdowns,
+        fetchEdeliaElectricityUsageBreakdowns,
+        fetchEdeliaGasUsageBreakdowns,
         fetchEdeliaProfile,
         fetchEdeliaMonthlyElecConsumptions,
         fetchEdeliaSimilarHomeYearlyElecComparisions,
@@ -1346,7 +1366,7 @@ const fetchEdeliaData = (requiredFields, entries, data, next) => {
       ]
       operations.forEach(operation => importer.use(operation))
       importer.args(requiredFields, entries, data)
-      return importer.fetch(function(err, fields, entries) {
+      return importer.fetch(function (err, fields, entries) {
         if (err && err.message !== 'no edelia') {
           K.logger.error('Error while fetching Edelia data')
           K.logger.error(err)
@@ -1410,7 +1430,7 @@ var K = (module.exports = BaseKonnector.createNew({
     updateOrCreate(logger, Contract, ['number', 'vendor']),
     updateOrCreate(logger, PaymentTerms, ['vendor', 'clientId']),
     updateOrCreate(logger, Home, ['pdl']),
-    updateOrCreate(logger, EnergyBreakdown, ['contractId', 'vendor']),
+    updateOrCreate(logger, EnergyBreakdown, ['contractId', 'vendor', 'energyType']),
     updateOrCreate(logger, ConsumptionStatement, [
       'contractNumber',
       'statementType',
@@ -1418,14 +1438,14 @@ var K = (module.exports = BaseKonnector.createNew({
       'statementCategory',
       'start'
     ]),
-    //displayData
+    // displayData
     filterExisting(logger, Bill, undefined, 'EDF'),
     saveBills
   ]
 }))
 
 // Helpers
-var getF = function(node, ...fields) {
+var getF = function (node, ...fields) {
   try {
     for (const field of Array.from(fields)) {
       node = node[field][0]
@@ -1437,7 +1457,7 @@ var getF = function(node, ...fields) {
   return node
 }
 
-var translate = function(dict, name) {
+var translate = function (dict, name) {
   if (name in dict) {
     return dict[name]
   }
@@ -1451,15 +1471,15 @@ var edfRequestPost = (path, body, callback) =>
     callback
   )
 
-var _edfRequestOptions = function(path, body) {
+var _edfRequestOptions = function (path, body) {
   const xmlBody = builder.buildObject(body)
   const options = {
-    //url: 'https://rce-mobile.edf.com' + path
+    // url: 'https://rce-mobile.edf.com' + path
     url: DOMAIN + path,
     method: 'POST',
     headers: {
       // Server needs Capitalize headers, and request use lower case...
-      //'Host': 'rce-mobile.edf.com'
+      // 'Host': 'rce-mobile.edf.com'
       Host: 'ws-mobile-particuliers.edf.com',
       'Content-Type': 'text/xml',
       Authorization: 'Basic QUVMTU9CSUxFX2lQaG9uZV9WMTpBRUxNT0JJTEVfaVBob25lX1Yx',
@@ -1473,16 +1493,16 @@ var _edfRequestOptions = function(path, body) {
   return options
 }
 
-var _edfRequestPost = function(path, body, callback) {
+var _edfRequestPost = function (path, body, callback) {
   K.logger.debug('called edfRequestPost')
-  return request(_edfRequestOptions(path, body), function(err, response, data) {
+  return request(_edfRequestOptions(path, body), function (err, response, data) {
     if (err) {
       K.logger.error(JSON.stringify(err))
     }
     if (err) {
       return callback('request error')
     }
-    return parser.parseString(data, function(err, result) {
+    return parser.parseString(data, function (err, result) {
       if (err) {
         return callback('request error')
       }
@@ -1491,7 +1511,7 @@ var _edfRequestPost = function(path, body, callback) {
   })
 }
 
-function parseAccord(accordObj) {
+function parseAccord (accordObj) {
   const client = parseClient(accordObj)
 
   // Contracts
@@ -1594,7 +1614,7 @@ function parseAccord(accordObj) {
   return { contract, client }
 }
 
-function parseAddr(addrElem) {
+function parseAddr (addrElem) {
   // Put address in cozy-contact like format, two lines :
   // First: Postbox, appartment and street adress on first
   // Second: Locality, region, postcode, country
@@ -1616,7 +1636,7 @@ function parseAddr(addrElem) {
   }
 }
 
-function parseClientName(identiteElem) {
+function parseClientName (identiteElem) {
   // name in cozy-contact like format !
   const getFIdentite = getF.bind(null, identiteElem)
   const civilite = getFIdentite('tns:Civilite') || ''
@@ -1630,7 +1650,7 @@ function parseClientName(identiteElem) {
   }
 }
 
-function parseClient(resBody) {
+function parseClient (resBody) {
   const client = {
     vendor: 'EDF',
     docTypeVersion: K.docTypeVersion
