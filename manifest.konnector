@@ -19,6 +19,10 @@
     }
   },
   "permissions": {
+    "accounts": {
+      "description": "Required to save the data",
+      "type": "io.cozy.accounts"
+    },
     "bills": {
       "description": "Required to save the bills data",
       "type": "io.cozy.bills"

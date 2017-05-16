@@ -21,11 +21,11 @@
   },
   "scripts": {
     "start": "node $NODE_OPTIONS index.js",
-    "build": "webpack",
-    "deploy": "git-directory-deploy --username Cozy --email contact@cozycloud.cc --directory build/ --branch build --repo=${DEPLOY_REPOSITORY:-origin}",
-    "predev": "env-cmd ./data/env.js cozy-authenticate manifest.konnectors",
-    "dev": "env-cmd ./data/env.js npm start",
-    "standalone": "env-cmd ./data/env_standalone.js npm start"
+    "oauth": "env-cmd ./data/env.js cozy-authenticate manifest.konnector",
+    "predev": "npm run oauth && env-cmd ./data/env.js cozy-init-dev-account ./data/account.txt ./data/env_fields.json",
+    "dev": "env-cmd ./data/env_development.js npm start",
+    "standalone": "env-cmd ./data/env_standalone.js npm start",
+    "build": "webpack"
   },
   "devDependencies": {
     "coffee-script": "^1.12.5",
