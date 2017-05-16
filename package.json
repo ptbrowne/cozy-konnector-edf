@@ -26,7 +26,7 @@
     "predev": "npm run oauth && env-cmd ./data/env.js cozy-init-dev-account ./data/account.txt ./data/env_fields.json",
     "dev": "env-cmd ./data/env_development.js npm start",
     "standalone": "env-cmd ./data/env_standalone.js npm start",
-    "build": "webpack"
+    "build": "webpack && cp manifest.konnector build/"
   },
   "devDependencies": {
     "coffee-script": "^1.12.5",
