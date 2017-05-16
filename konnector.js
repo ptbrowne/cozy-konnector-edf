@@ -1300,6 +1300,12 @@ const fetchEdeliaGasUsageBreakdowns = makeEdeliaFetcher(
   }
 )
 
+const checkRequiredFields = function (requiredFields, entries, data, next) {
+  if (!requiredFields.email || !requiredFields.password) {
+    throw new Error('You need to pass `email` and `password` in your requiredFields')
+  }
+  return next()
+}
 
 const prepareEntries = function (requiredFields, entries, data, next) {
   entries.homes = []
@@ -1414,6 +1420,7 @@ var K = (module.exports = BaseKonnector.createNew({
   models: [Client, Contract, PaymentTerms, Home, ConsumptionStatement, Bill],
 
   fetchOperations: [
+    checkRequiredFields,
     prepareEntries,
 
     getEDFToken,
