@@ -21,6 +21,7 @@
   },
   "scripts": {
     "start": "node $NODE_OPTIONS index.js",
+    "deploy": "git-directory-deploy --username Cozy --email contact@cozycloud.cc --directory build/ --branch build --repo=${DEPLOY_REPOSITORY:-origin}",
     "oauth": "env-cmd ./data/env.js cozy-authenticate manifest.konnector",
     "predev": "npm run oauth && env-cmd ./data/env.js cozy-init-dev-account ./data/account.txt ./data/env_fields.json",
     "dev": "env-cmd ./data/env_development.js npm start",
