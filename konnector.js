@@ -664,6 +664,26 @@ const fetchVisualiserHistoConso = function (
   )
 }
 
+const generateBillsFromConsumptionStatements = function(requiredFields, entries, data, callback) {
+   K.logger.info("fetchVisualiserHistoConso");
+   entries.consumptionstatements.reverse().forEach(function(cs) {
+     if (!entries.fetched.some((function(bill) {
+       return bill.number === cs.billNumber;
+     }))) {
+       return entries.fetched.push({
+         vendor: 'EDF',
+         clientId: entries.clients[0].clientId,
+         number: cs.billNumber,
+         date: moment(cs.end, 'YYYY-MM-DD'),
+         pdfurl: DOMAIN + '/ws/recupererDocumentContractuelGet_rest_V1-0/invoke',
+         docTypeVersion: K.docTypeVersion
+       });
+     }
+   });
+   return callback();
+ };
+
+
 const saveBills = function (requiredFields, entries, data, callback) {
   const options = {}
   options.vendor = 'edf'
@@ -707,7 +727,19 @@ const saveBills = function (requiredFields, entries, data, callback) {
           'documentPDF',
           'pdf'
         )
-        return resolve({ data: base64PDF, contentType: 'application/pdf' })
+
+        let pdf
+        if (typeof Buffer.from === "function") {
+         pdf = Buffer.from(base64PDF, 'base64');
+        } else {
+          pdf = new Buffer(base64PDF, 'base64');
+        }
+        const bufferStream = new stream.PassThrough();
+        bufferStream.end(pdf);
+        return resolve({
+          data: bufferStream,
+          contentType: 'application/pdf'
+        })
       })
     })
 
@@ -791,7 +823,8 @@ const fetchEdeliaProfile = function (requiredFields, entries, data, callback) {
           occupantsCount: obj.noOfOccupants,
           principalHeatingSystemType: obj.principalHeatingSystemType,
           sanitoryHotWaterType: obj.sanitoryHotWaterType,
-          docTypeVersion: K.docTypeVersion
+          docTypeVersion: K.docTypeVersion,
+          origin: 'EDF'
         }
 
         entries.homes.push(doc)
