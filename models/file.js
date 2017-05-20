@@ -1,4 +1,4 @@
-const request = require('request')
+const request = require('request-promise')
 const log = require('debug')('konnectors:file')
 
 const cozy = require('cozy-konnector-libs').cozyClient
@@ -33,28 +33,20 @@ module.exports = {
         }
 
         log(`Downloading file at ${url}...`)
-        if (parseoptions) {
-          request(options, (err, response, data) => {
-            if (err) {
-              throw 'request error'
-            }
-
-            return parseoptions(data).then(file => {
+          return request(options)
+            .then(function (data) {
+              return parseoptions(data)
+            })
+            .then(file => {
               return cozy.files.create(file.data, {
                 name: fileName,
                 dirID: folder._id,
                 contentType: file.contentType
               })
             })
-          })
-        } else {
-          return cozy.files.create(request(options), {
-            name: fileName,
-            dirID: folder._id
-          })
-        }
       })
       .then(thefile => {
+
         callback(null, thefile)
       })
       .catch(err => callback(err))
