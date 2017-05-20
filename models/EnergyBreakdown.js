@@ -2,7 +2,7 @@ const baseModel = require('../lib/base_model')
 
 module.exports = baseModel.createNew({
   displayName: 'EnergyBreakdown',
-  name: 'org.fing.mesinfos.energybreakdown',
+  name: 'org.fing.mesinfos.energybreakdown'
 
   /*
       Fields :
@@ -36,5 +36,3 @@ module.exports = baseModel.createNew({
            { usage: 'US_GLOBAL', cost: 942, percent: 100 } ] }
   */
 })
-
-
