@@ -1268,7 +1268,7 @@ const makeEdeliaFetcher = function(name, options) {
   const { parse, getPath, bail } = options
 
   return function(requiredFields, entries, data, callback) {
-    if (bail && bail()) {
+    if (bail && bail(entries, data)) {
       callback()
     }
     K.logger.info(`Fetching ${name}`)
@@ -1276,7 +1276,7 @@ const makeEdeliaFetcher = function(name, options) {
       if (err) {
         K.logger.error(`Error during ${name}`)
         K.logger.error(err)
-        return callback(err)
+        return callback()
       }
       try {
         parse(entries, data, objs, response)
@@ -1295,8 +1295,11 @@ const jsonlog = function(d) {
 }
 
 const fetchEdeliaElectricityUsageBreakdowns = makeEdeliaFetcher(
-  'Edelia usage breakdowns',
+  'Edelia elec usage breakdowns',
   {
+    bail: function (entries, data) {
+      return data.noEdelia || data.noElec
+    },
     getPath: path => {
       const now = new Date()
       return `sites/-/elec-usage-breakdowns?ts=${now.toISOString()}`
@@ -1320,8 +1323,11 @@ const fetchEdeliaElectricityUsageBreakdowns = makeEdeliaFetcher(
 )
 
 const fetchEdeliaGasUsageBreakdowns = makeEdeliaFetcher(
-  'Edelia usage breakdowns',
+  'Edelia gas usage breakdowns',
   {
+    bail: function (entries, data) {
+      return data.noEdelia || data.noGas
+    },
     getPath: path => {
       const now = new Date()
       return `sites/-/gas-usage-breakdowns?ts=${now.toISOString()}`
@@ -1406,15 +1412,15 @@ const fetchEdeliaData = (requiredFields, entries, data, next) => {
       const importer = fetcher.new()
       const operations = [
         fetchEdeliaToken,
-        fetchEdeliaElectricityUsageBreakdowns,
-        fetchEdeliaGasUsageBreakdowns,
         fetchEdeliaProfile,
         fetchEdeliaMonthlyElecConsumptions,
         fetchEdeliaSimilarHomeYearlyElecComparisions,
         fetchEdeliaElecIndexes,
         fetchEdeliaMonthlyGasConsumptions,
         fetchEdeliaSimilarHomeYearlyGasComparisions,
-        fetchEdeliaGasIndexes
+        fetchEdeliaGasIndexes,
+        fetchEdeliaElectricityUsageBreakdowns,
+        fetchEdeliaGasUsageBreakdowns,
       ]
       operations.forEach(operation => importer.use(operation))
       importer.args(requiredFields, entries, data)
