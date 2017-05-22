@@ -1283,7 +1283,7 @@ const makeEdeliaFetcher = function(name, options) {
         K.logger.info(`Fetched ${name}`)
         callback()
       } catch (e) {
-        K.logger.error(`Error during ${name}`)
+        K.logger.error(`Error during ${name}`, e)
         callback(e)
       }
     })
