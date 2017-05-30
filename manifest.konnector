@@ -4,16 +4,22 @@
   "type": "node",
   "slug": "edf",
   "description": "description",
-  "source": "git@gitlab.cozycloud.cc:gjacquart/connecteur-edf.git",
+  "source": "https://github.com/cozy/cozy-konnector-edf.git",
   "locales": {
     "fr": {
       "description": "Récupère toutes vos factures",
       "permissions": {
         "bills": {
-          "description": "Utilisé pour sauvegarder les données de facturation"
+          "description": "Utilisé pour sauvegarder les données de facturation EDF"
         },
         "files": {
-          "description": "Utilisé pour sauvegarder les factures"
+          "description": "Utilisé pour sauvegarder les factures EDF"
+        },
+        "contract": {
+          "description": "Utilisé pour sauvegarder vos contrats EDF"
+        },
+        "consumption": {
+          "description": "Utilisé pour sauvegarder vos rapports de consommation d'énergie EDF"
         }
       }
     }
@@ -57,7 +63,7 @@
     }
   },
   "developer": {
-    "name": "yourname",
-    "url": "your web site"
+    "name": "ptbrowne",
+    "url": "https://github.com/ptbrowne"
   }
 }

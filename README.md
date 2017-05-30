@@ -1,4 +1,4 @@
-[Cozy][cozy] <YOUR SUPER NEW KONNECTOR NAME>
+[Cozy][cozy] EDF konnector
 =======================================
 
 What's Cozy?
@@ -12,7 +12,7 @@ What's Cozy?
 What's this new konnector?
 --------------------------
 
-<YOUR DESCRIPTION HERE>
+A connector to retrieve your EDF bills and billing data and save them into your Cozy.
 
 ### Open a Pull-Request
 
@@ -82,7 +82,7 @@ You can reach the Cozy Community by:
 License
 -------
 
-<YOUR KONNECTOR NAME> is developed by <your name> and distributed under the [AGPL v3 license][agpl-3.0].
+cozy-konnector-edf is developed by [ptbrowne](https://github.com/ptbrowne) for Cozy Cloud and distributed under the [AGPL v3 license][agpl-3.0].
 
 [cozy]: https://cozy.io "Cozy Cloud"
 [agpl-3.0]: https://www.gnu.org/licenses/agpl-3.0.html
