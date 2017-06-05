@@ -76,7 +76,7 @@ const DOMAIN = 'https://ws-mobile-particuliers.edf.com'
 // Requests
 
 const getEDFToken = function(requiredFields, entries, data, callback) {
-  K.logger.info('getEDFToken')
+  logger.info('getEDFToken')
   const path = '/ws/authentifierUnClientParticulier_rest_V3-0/invoke'
   const body = {
     'tns:msgRequete': {
@@ -106,17 +106,17 @@ const getEDFToken = function(requiredFields, entries, data, callback) {
       'ent:codeRetour'
     )
     if (errorCode && errorCode !== '0000') {
-      K.logger.error(getF(result, 'tns:enteteSortie', 'ent:libelleRetour '))
+      logger.error(getF(result, 'tns:enteteSortie', 'ent:libelleRetour '))
     }
 
     const token = getF(result['tns:msgReponse'], 'tns:corpsSortie', 'tns:jeton')
 
     if (token != null) {
-      K.logger.info('EDF token fetched')
+      logger.info('EDF token fetched')
       data.edfToken = token
       return callback()
     } else {
-      K.logger.error("Can't fetch EDF token")
+      logger.error("Can't fetch EDF token")
       return callback('token not found')
     }
   })
@@ -128,7 +128,7 @@ const fetchListerContratClientParticulier = function(
   data,
   callback
 ) {
-  K.logger.info('fetch listerContratClientParticulier')
+  logger.info('fetch listerContratClientParticulier')
 
   const path = '/ws/listerContratClientParticulier_rest_V3-0/invoke'
   const body = {
@@ -151,7 +151,7 @@ const fetchListerContratClientParticulier = function(
       const response = result['tns:msgReponse']
       const errorCode = getF(response, 'tns:EnteteSortie', 'tns:CodeErreur')
       if (errorCode && errorCode !== 'PSC0000') {
-        K.logger.error(getF(response, 'tns:EnteteSortie', 'tns:LibelleErreur'))
+        logger.error(getF(response, 'tns:EnteteSortie', 'tns:LibelleErreur'))
 
         return callback('request error')
       }
@@ -161,7 +161,7 @@ const fetchListerContratClientParticulier = function(
         1
       )
 
-      K.logger.info(`Number EDF contracts ${accords.length}`)
+      logger.info(`Number EDF contracts ${accords.length}`)
 
       const clientContracts = accords.map(parseAccord)
       clientContracts.forEach(({ client, contract }) => {
@@ -169,11 +169,11 @@ const fetchListerContratClientParticulier = function(
         entries.clients.push(client)
       })
 
-      K.logger.info('Fetched listerContratClientParticulier')
+      logger.info('Fetched listerContratClientParticulier')
 
       return callback()
     } catch (e) {
-      K.logger.error('While fetching listerContratClientParticulier', e)
+      logger.error('While fetching listerContratClientParticulier', e)
       return callback(e)
     }
   })
@@ -185,7 +185,7 @@ const fetchVisualiserPartenaire = function(
   data,
   callback
 ) {
-  K.logger.info('fetchVisualiserPartenaire')
+  logger.info('fetchVisualiserPartenaire')
 
   const path = '/ws/visualiserPartenaire_rest_V2-0/invoke'
   const body = {
@@ -217,7 +217,7 @@ const fetchVisualiserPartenaire = function(
     try {
       const errorCode = getF(result, 'ns:enteteSortie', 'ent:codeRetour')
       if (errorCode && errorCode !== '0') {
-        K.logger.error(getF(result, 'tns:enteteSortie', 'tns:libelleRetour'))
+        logger.error(getF(result, 'tns:enteteSortie', 'tns:libelleRetour'))
 
         return callback() // Continue on error.
       }
@@ -254,11 +254,11 @@ const fetchVisualiserPartenaire = function(
 
       entries.clients[0] = _.extend(entries.clients[0], client)
 
-      K.logger.info('Fetched visualiserPartenaire.')
+      logger.info('Fetched visualiserPartenaire.')
       return callback()
     } catch (e) {
-      K.logger.error('While fetching visualiserPartenaire.')
-      K.logger.error(e)
+      logger.error('While fetching visualiserPartenaire.')
+      logger.error(e)
       return callback(e)
     }
   })
@@ -270,7 +270,7 @@ const fetchVisualiserAccordCommercial = function(
   data,
   callback
 ) {
-  K.logger.info('fetchVisualiserAccordCommercial')
+  logger.info('fetchVisualiserAccordCommercial')
 
   const path = '/ws/visualiserAccordCommercial_rest_sso_V3-0/invoke'
   const body = {
@@ -297,7 +297,7 @@ const fetchVisualiserAccordCommercial = function(
     try {
       const errorCode = getF(webServiceResp, 'tns:CodeEtatService')
       if (errorCode && errorCode !== 'PSC0000') {
-        K.logger.error(getF(webServiceResp, 'tns:LibelleEtatService'))
+        logger.error(getF(webServiceResp, 'tns:LibelleEtatService'))
         return callback() // Continue on error.
       }
 
@@ -365,11 +365,11 @@ const fetchVisualiserAccordCommercial = function(
         contract => (contract.services = contract.services.concat(services))
       )
 
-      K.logger.info('Fetched visualiserAccordCommercial.')
+      logger.info('Fetched visualiserAccordCommercial.')
       return callback()
     } catch (e) {
-      K.logger.error('While fetching visualiserAccordCommercial.')
-      K.logger.error(e)
+      logger.error('While fetching visualiserAccordCommercial.')
+      logger.error(e)
       return callback(e)
     }
   })
@@ -381,7 +381,7 @@ const fetchVisualiserCalendrierPaiement = function(
   data,
   callback
 ) {
-  K.logger.info('fetchVisualiserCalendrierPaiement')
+  logger.info('fetchVisualiserCalendrierPaiement')
   const path = '/ws/visualiserCalendrierPaiement_rest_V2-0/invoke'
   const body = {
     'message:msgRequete': {
@@ -419,7 +419,7 @@ const fetchVisualiserCalendrierPaiement = function(
         'ent:codeRetour'
       )
       if (errorCode && errorCode !== '0') {
-        K.logger.error(
+        logger.error(
           getF(result, 'ns:msgReponse', 'ns:enteteSortie', 'ent:libelleRetour')
         )
         return callback() // Continue, whitout error.
@@ -436,7 +436,7 @@ const fetchVisualiserCalendrierPaiement = function(
           listeEcheances['ns:listeEcheances'] &&
           listeEcheances['ns:listeEcheances'].length > 0)
       ) {
-        K.logger.warn('No payment schedules')
+        logger.warn('No payment schedules')
         return callback() // Continue whithout errors.
       }
 
@@ -475,21 +475,21 @@ const fetchVisualiserCalendrierPaiement = function(
       }
 
       entries.paymenttermss[0].paymentSchedules = paymentSchedules
-      K.logger.info(
+      logger.info(
         `Fetched ${paymentSchedules.length} ` +
           'from fetchVisualiserCalendrierPaiement'
       )
       return callback()
     } catch (e) {
-      K.logger.error('While fetchVisualiserCalendrierPaiement')
-      K.logger.error(e)
+      logger.error('While fetchVisualiserCalendrierPaiement')
+      logger.error(e)
       return callback(e)
     }
   })
 }
 
 const fetchVisualiserFacture = function(reqFields, entries, data, callback) {
-  K.logger.info('fetchVisualiserFacture')
+  logger.info('fetchVisualiserFacture')
   const path = '/ws/visualiserFacture_rest_V3-0/invoke'
   const body = {
     'tns:msgRequete': {
@@ -519,7 +519,7 @@ const fetchVisualiserFacture = function(reqFields, entries, data, callback) {
         'codeErreur'
       )
       if (errorCode && errorCode !== '0') {
-        K.logger.error(
+        logger.error(
           getF(
             result['tns:msgReponse'],
             'visualiserFactureResponse',
@@ -561,11 +561,11 @@ const fetchVisualiserFacture = function(reqFields, entries, data, callback) {
       })
 
       entries.fetched = bills
-      K.logger.info(`Fetched ${bills.length} bills`)
+      logger.info(`Fetched ${bills.length} bills`)
       return callback()
     } catch (e) {
-      K.logger.error('While fetchVisualiserFacture')
-      K.logger.error(e)
+      logger.error('While fetchVisualiserFacture')
+      logger.error(e)
       return callback(e)
     }
   })
@@ -577,7 +577,7 @@ const fetchVisualiserHistoConso = function(
   data,
   callback
 ) {
-  K.logger.info('fetchVisualiserHistoConso')
+  logger.info('fetchVisualiserHistoConso')
   return async.mapSeries(
     entries.contracts,
     function(contract, cb) {
@@ -612,13 +612,13 @@ const fetchVisualiserHistoConso = function(
           const getFSortie = getF.bind(null, result, 'ns:enteteSortie')
           const errorCode = getFSortie('ent:codeRetour')
           if (errorCode && errorCode !== '0') {
-            K.logger.error(getFSortie('tns:libelleRetour'))
+            logger.error(getFSortie('tns:libelleRetour'))
             // Continue on error.
             return callback()
           }
 
           if (!('ns:corpsSortie' in result['ns:msgReponse'])) {
-            K.logger.info('No histoConsos to fetch')
+            logger.info('No histoConsos to fetch')
             return callback(null, [])
           }
 
@@ -644,8 +644,8 @@ const fetchVisualiserHistoConso = function(
 
           return cb(null, res)
         } catch (e) {
-          K.logger.error('While fetching visualiserHistoConso.')
-          K.logger.error(e)
+          logger.error('While fetching visualiserHistoConso.')
+          logger.error(e)
           return cb(e)
         }
       })
@@ -660,7 +660,7 @@ const fetchVisualiserHistoConso = function(
         []
       )
 
-      K.logger.info(
+      logger.info(
         `Fetched ${entries.consumptionstatements.length}` +
           ' consumptionStatements'
       )
@@ -675,7 +675,7 @@ const generateBillsFromConsumptionStatements = function(
   data,
   callback
 ) {
-  K.logger.info('fetchVisualiserHistoConso')
+  logger.info('fetchVisualiserHistoConso')
   entries.consumptionstatements.reverse().forEach(function(cs) {
     if (
       !entries.fetched.some(function(bill) {
@@ -767,7 +767,7 @@ const saveBills = function(requiredFields, entries, data, callback) {
 // #
 
 const fetchEdeliaToken = function(requiredFields, entries, data, callback) {
-  K.logger.info('fetchEdeliaToken')
+  logger.info('fetchEdeliaToken')
 
   const formData = {
     client_id: 'sha1pae0Pahngee6uwiphooDie7thaiquahf2xohd6IeFeiphi9ziu0uw3am',
@@ -785,12 +785,12 @@ const fetchEdeliaToken = function(requiredFields, entries, data, callback) {
     },
     function(err, response, result) {
       if (err) {
-        K.logger.error('While fetching edelia token.')
-        K.logger.error(err)
+        logger.error('While fetching edelia token.')
+        logger.error(err)
         return callback(err)
       }
 
-      K.logger.info('Fetched edelia token')
+      logger.info('Fetched edelia token')
       data.edeliaToken = result.access_token
       return callback()
     }
@@ -798,7 +798,7 @@ const fetchEdeliaToken = function(requiredFields, entries, data, callback) {
 }
 
 const fetchEdeliaProfile = function(requiredFields, entries, data, callback) {
-  K.logger.info('fetchEdeliaProfile')
+  logger.info('fetchEdeliaProfile')
   return getEdelia(
     data.edeliaToken,
     '/sites/-/profiles/simple?ts=' + new Date().toISOString(),
@@ -810,14 +810,14 @@ const fetchEdeliaProfile = function(requiredFields, entries, data, callback) {
         }
 
         if (err) {
-          K.logger.error('While fetchEdeliaProfile')
-          K.logger.error(err)
+          logger.error('While fetchEdeliaProfile')
+          logger.error(err)
           throw err
         }
 
         if (obj.errorCode && obj.errorCode === '403') {
           data.noEdelia = true
-          K.logger.warn(`No edelia: ${obj.errorDescription}`)
+          logger.warn(`No edelia: ${obj.errorDescription}`)
           throw new Error('no edelia')
         }
 
@@ -839,7 +839,7 @@ const fetchEdeliaProfile = function(requiredFields, entries, data, callback) {
         }
 
         entries.homes.push(doc)
-        return K.logger.info('Fetched fetchEdeliaProfile')
+        return logger.info('Fetched fetchEdeliaProfile')
       } catch (e) {
         return (error = e)
       } finally {
@@ -863,7 +863,7 @@ const fetchEdeliaMonthlyElecConsumptions = function(
     return callback()
   }
 
-  K.logger.info('fetchEdeliaMonthlyElecConsumptions')
+  logger.info('fetchEdeliaMonthlyElecConsumptions')
   return getEdelia(
     data.edeliaToken,
     '/sites/-/monthly-elec-consumptions?' +
@@ -873,14 +873,14 @@ const fetchEdeliaMonthlyElecConsumptions = function(
       let error = null
       try {
         if (response.statusCode === 404 || response.statusCode === 500) {
-          K.logger.warn('No EdeliaMonthlyElecConsumptions')
+          logger.warn('No EdeliaMonthlyElecConsumptions')
           data.noElec = true
           throw null
         }
 
         if (err) {
-          K.logger.error('Wihle fetchEdeliaMonthlyElecConsumptions')
-          K.logger.error(err)
+          logger.error('Wihle fetchEdeliaMonthlyElecConsumptions')
+          logger.error(err)
           throw err
         }
 
@@ -946,7 +946,7 @@ const fetchEdeliaMonthlyElecConsumptions = function(
           )
         }
 
-        return K.logger.info('Fetched fetchEdeliaMonthlyElecConsumptions')
+        return logger.info('Fetched fetchEdeliaMonthlyElecConsumptions')
       } catch (e) {
         return (error = e)
       } finally {
@@ -966,7 +966,7 @@ const fetchEdeliaSimilarHomeYearlyElecComparisions = function(
     return callback()
   }
 
-  K.logger.info('fetchEdeliaSimilarHomeYearlyElecComparisions')
+  logger.info('fetchEdeliaSimilarHomeYearlyElecComparisions')
   return getEdelia(
     data.edeliaToken,
     '/sites/-/similar-home-yearly-elec-comparisons?begin-year=2012',
@@ -974,20 +974,20 @@ const fetchEdeliaSimilarHomeYearlyElecComparisions = function(
       let error = null
       try {
         if (response.statusCode === 404 || response.statusCode === 500) {
-          K.logger.warn('No EdeliaSimilarHomeYearlyElecComparisions')
+          logger.warn('No EdeliaSimilarHomeYearlyElecComparisions')
           data.noElec = true
           throw null
         }
         if (err) {
-          K.logger.error('While fetchEdeliaSimilarHomeYearlyElecComparisions')
-          K.logger.error(err)
+          logger.error('While fetchEdeliaSimilarHomeYearlyElecComparisions')
+          logger.error(err)
           throw err
         }
 
         objs.forEach(function(obj) {
           const statement = data.consumptionStatementByYear[obj.year]
           if (!statement) {
-            K.logger.warn(`No yearly statement for ${obj.date.year}`)
+            logger.warn(`No yearly statement for ${obj.date.year}`)
             return
           }
           return (statement.similarHomes = {
@@ -997,7 +997,7 @@ const fetchEdeliaSimilarHomeYearlyElecComparisions = function(
           })
         })
 
-        K.logger.info('Fetched fetchEdeliaSimilarHomeYearlyElecComparisions')
+        logger.info('Fetched fetchEdeliaSimilarHomeYearlyElecComparisions')
       } catch (e) {
         error = e
       }
@@ -1017,7 +1017,7 @@ const fetchEdeliaElecIndexes = function(
   if (data.noEdelia || data.noElec) {
     return callback()
   }
-  K.logger.info('fetchEdeliaElecIndexes')
+  logger.info('fetchEdeliaElecIndexes')
   return getEdelia(
     data.edeliaToken,
     '/sites/-/elec-indexes?begin-date=2012-01-01&' +
@@ -1026,13 +1026,13 @@ const fetchEdeliaElecIndexes = function(
       let error = null
       try {
         if (response.statusCode === 404) {
-          K.logger.warn('No EdeliaElecIndexes')
+          logger.warn('No EdeliaElecIndexes')
           throw null
         }
 
         if (err) {
-          K.logger.error('Wihle fetchEdeliaElecIndexes')
-          K.logger.error(err)
+          logger.error('Wihle fetchEdeliaElecIndexes')
+          logger.error(err)
           throw err
         }
 
@@ -1040,7 +1040,7 @@ const fetchEdeliaElecIndexes = function(
           const statement =
             data.consumptionStatementByMonth[obj.date.slice(0, 7)]
           if (!statement) {
-            K.logger.warn(`No monthly statement for ${obj.date.slice(0, 7)}`)
+            logger.warn(`No monthly statement for ${obj.date.slice(0, 7)}`)
             return
           }
 
@@ -1048,7 +1048,7 @@ const fetchEdeliaElecIndexes = function(
           return statement.statements.push(obj)
         })
 
-        K.logger.info('Fetched fetchEdeliaElecIndexes')
+        logger.info('Fetched fetchEdeliaElecIndexes')
       } catch (e) {
         error = e
       }
@@ -1072,7 +1072,7 @@ const fetchEdeliaMonthlyGasConsumptions = function(
   if (data.noEdelia) {
     return callback()
   }
-  K.logger.info('fetchEdeliaMonthlyGasConsumptions')
+  logger.info('fetchEdeliaMonthlyGasConsumptions')
   return getEdelia(
     data.edeliaToken,
     '/sites/-/monthly-gas-consumptions?begin-month=2012-01&' +
@@ -1081,14 +1081,14 @@ const fetchEdeliaMonthlyGasConsumptions = function(
       let error = null
       try {
         if (response.statusCode === 404) {
-          K.logger.warn('No EdeliaMonthlyGasConsumptions')
+          logger.warn('No EdeliaMonthlyGasConsumptions')
           data.noGas = true
           throw null
         }
 
         if (err) {
-          K.logger.error('Wihle fetchEdeliaMonthlyGasConsumptions')
-          K.logger.error(err)
+          logger.error('Wihle fetchEdeliaMonthlyGasConsumptions')
+          logger.error(err)
           throw err
         }
 
@@ -1154,7 +1154,7 @@ const fetchEdeliaMonthlyGasConsumptions = function(
           )
         }
 
-        K.logger.info('Fetched fetchEdeliaMonthlyGasConsumptions')
+        logger.info('Fetched fetchEdeliaMonthlyGasConsumptions')
       } catch (e) {
         error = e
       }
@@ -1174,7 +1174,7 @@ const fetchEdeliaSimilarHomeYearlyGasComparisions = function(
     return callback()
   }
 
-  K.logger.info('fetchEdeliaSimilarHomeYearlyGasComparisions')
+  logger.info('fetchEdeliaSimilarHomeYearlyGasComparisions')
   return getEdelia(
     data.edeliaToken,
     '/sites/-/similar-home-yearly-gas-comparisons?begin-year=2012',
@@ -1182,20 +1182,20 @@ const fetchEdeliaSimilarHomeYearlyGasComparisions = function(
       let error = null
       try {
         if (response.statusCode === 404 || response.statusCode === 500) {
-          K.logger.warn('No EdeliaSimilarHomeYearlyGasComparisions')
+          logger.warn('No EdeliaSimilarHomeYearlyGasComparisions')
           throw null
         }
 
         if (err) {
-          K.logger.error('While fetchEdeliaSimilarHomeYearlyGasComparisions')
-          K.logger.error(err)
+          logger.error('While fetchEdeliaSimilarHomeYearlyGasComparisions')
+          logger.error(err)
           throw err
         }
 
         objs.forEach(function(obj) {
           const statement = data.consumptionStatementByYear[obj.year]
           if (!statement) {
-            K.logger.warn(`No yearly statement for ${obj.date.year}`)
+            logger.warn(`No yearly statement for ${obj.date.year}`)
             return
           }
 
@@ -1206,7 +1206,7 @@ const fetchEdeliaSimilarHomeYearlyGasComparisions = function(
           })
         })
 
-        K.logger.info('Fetched fetchEdeliaSimilarHomeYearlyGasComparisions')
+        logger.info('Fetched fetchEdeliaSimilarHomeYearlyGasComparisions')
       } catch (e) {
         error = e
       }
@@ -1226,7 +1226,7 @@ const fetchEdeliaGasIndexes = function(
     return callback()
   }
 
-  K.logger.info('fetchEdeliaGasIndexes')
+  logger.info('fetchEdeliaGasIndexes')
 
   const end = moment().format('YYYY-MM-DD')
   const path = `/sites/-/gas-indexes?begin-date=2012-01-01&end-date=${end}&types=`
@@ -1234,13 +1234,13 @@ const fetchEdeliaGasIndexes = function(
     let error = null
     try {
       if (response.statusCode === 404) {
-        K.logger.warn('No EdeliaGasIndexes')
+        logger.warn('No EdeliaGasIndexes')
         throw null
       }
 
       if (err) {
-        K.logger.error('Wihle fetchEdeliaGasIndexes')
-        K.logger.error(err)
+        logger.error('Wihle fetchEdeliaGasIndexes')
+        logger.error(err)
         throw err
       }
 
@@ -1248,14 +1248,14 @@ const fetchEdeliaGasIndexes = function(
         const monthKey = obj.date.slice(0, 7)
         const statement = data.consumptionStatementByMonth[monthKey]
         if (!statement) {
-          K.logger.warn(`No monthly statement for ${monthKey}`)
+          logger.warn(`No monthly statement for ${monthKey}`)
           return
         }
         statement.statements = statement.statements || []
         return statement.statements.push(obj)
       })
 
-      K.logger.info('Fetched fetchEdeliaGasIndexes')
+      logger.info('Fetched fetchEdeliaGasIndexes')
     } catch (e) {
       error = e
     }
@@ -1271,19 +1271,19 @@ const makeEdeliaFetcher = function(name, options) {
     if (bail && bail(entries, data)) {
       callback()
     }
-    K.logger.info(`Fetching ${name}`)
+    logger.info(`Fetching ${name}`)
     getEdelia(data.edeliaToken, getPath(), function(err, response, objs) {
       if (err) {
-        K.logger.error(`Error during ${name}`)
-        K.logger.error(err)
+        logger.error(`Error during ${name}`)
+        logger.error(err)
         return callback()
       }
       try {
         parse(entries, data, objs, response)
-        K.logger.info(`Fetched ${name}`)
+        logger.info(`Fetched ${name}`)
         callback()
       } catch (e) {
-        K.logger.error(`Error during ${name}`, e)
+        logger.error(`Error during ${name}`, e)
         callback(e)
       }
     })
@@ -1291,7 +1291,7 @@ const makeEdeliaFetcher = function(name, options) {
 }
 
 const jsonlog = function(d) {
-  K.logger.info(JSON.stringify(d, null, 2))
+  logger.info(JSON.stringify(d, null, 2))
 }
 
 const fetchEdeliaElectricityUsageBreakdowns = makeEdeliaFetcher(
@@ -1396,15 +1396,15 @@ const buildNotifContent = function(requiredFields, entries, data, next) {
 }
 
 const displayData = function(requiredFields, entries, data, next) {
-  K.logger.info('display data')
-  K.logger.info(JSON.stringify(entries, null, 2))
-  K.logger.info(JSON.stringify(data, null, 2))
+  logger.info('display data')
+  logger.info(JSON.stringify(entries, null, 2))
+  logger.info(JSON.stringify(data, null, 2))
 
   return next()
 }
 
 const fetchEdeliaData = (requiredFields, entries, data, next) => {
-  K.logger.info(`Number of Edelia contracts ${entries.contracts.length}`)
+  logger.info(`Number of Edelia contracts ${entries.contracts.length}`)
   async.eachSeries(
     entries.contracts,
     function(contract, callback) {
@@ -1426,8 +1426,8 @@ const fetchEdeliaData = (requiredFields, entries, data, next) => {
       importer.args(requiredFields, entries, data)
       return importer.fetch(function(err, fields, entries) {
         if (err && err.message !== 'no edelia') {
-          K.logger.error('Error while fetching Edelia data')
-          K.logger.error(err)
+          logger.error('Error while fetching Edelia data')
+          logger.error(err)
         }
         // Continue on error.
         return callback()
@@ -1558,10 +1558,10 @@ var _edfRequestOptions = function(path, body) {
 }
 
 var _edfRequestPost = function(path, body, callback) {
-  K.logger.debug('called edfRequestPost')
+  logger.debug('called edfRequestPost')
   return request(_edfRequestOptions(path, body), function(err, response, data) {
     if (err) {
-      K.logger.error(JSON.stringify(err))
+      logger.error(JSON.stringify(err))
     }
     if (err) {
       return callback('request error')
